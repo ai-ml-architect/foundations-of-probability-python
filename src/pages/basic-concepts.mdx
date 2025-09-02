@@ -1,0 +1,662 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: "Basic Probability Concepts in Python"
+description: "Explore fundamental probability concepts through hands-on Python implementation, from sample spaces to the Law of Large Numbers."
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Equation from '../components/ui/Equation.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import Figure from '../components/ui/Figure.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'sample-spaces-events', text: 'Sample Spaces and Events in Computational Context' },
+  { depth: 3, slug: 'implementing-sample-spaces', text: 'Implementing Sample Spaces' },
+  { depth: 3, slug: 'event-definition', text: 'Event Definition and Manipulation' },
+  { depth: 2, slug: 'law-of-large-numbers', text: 'The Law of Large Numbers: Simulation and Convergence' },
+  { depth: 3, slug: 'demonstrating-convergence', text: 'Demonstrating Convergence Through Simulation' },
+  { depth: 3, slug: 'probability-estimation', text: 'Probability Estimation Through Frequency' },
+  { depth: 2, slug: 'conditional-probability', text: 'Conditional Probability: The Foundation of Learning' },
+  { depth: 3, slug: 'card-deck-example', text: 'Card Deck Example: Computing Conditional Probabilities' },
+  { depth: 3, slug: 'medical-diagnosis', text: 'Medical Diagnosis: A Practical Application' },
+  { depth: 2, slug: 'independence', text: 'Independence and Its Implications' },
+  { depth: 3, slug: 'testing-independence', text: 'Testing for Independence' },
+  { depth: 2, slug: 'random-variables', text: 'Random Variables: From Outcomes to Numbers' },
+  { depth: 3, slug: 'discrete-random-variables', text: 'Discrete Random Variables' },
+  { depth: 3, slug: 'continuous-random-variables', text: 'Continuous Random Variables' },
+  { depth: 2, slug: 'visualization', text: 'Visualization of Probability Concepts' }
+]} />
+
+# Basic Probability Concepts in Python
+
+This section bridges the gap between theoretical probability concepts and their practical implementation in Python. Through hands-on examples and visualizations, we'll explore how fundamental probability principles translate into computational tools that can solve real-world problems.
+
+## Sample Spaces and Events in Computational Context
+
+<Callout variant="note">
+**For Beginners:** When we write a Python program to simulate probability, we need to represent all possible outcomes of our random experiment. This is like creating a list of everything that could happen when we flip a coin, roll a die, or draw a card from a deck.
+</Callout>
+
+<Callout variant="tip">
+**For Advanced Practitioners:** The computational representation of sample spaces requires careful consideration of data structures, memory efficiency, and the mathematical properties we need to preserve. The choice of representation affects both the clarity of our code and the efficiency of our calculations.
+</Callout>
+
+### Implementing Sample Spaces
+
+Let's start with a simple example: modeling the sample space for rolling a six-sided die.
+
+<CodeBlock filename="sample_spaces.py" lang="python">
+{`import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter
+from scipy import stats
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Define sample space for a six-sided die
+sample_space_die = [1, 2, 3, 4, 5, 6]
+print(f"Sample space for die: {sample_space_die}")
+
+# Each outcome has equal probability (uniform distribution)
+prob_each_outcome = 1 / len(sample_space_die)
+print(f"Probability of each outcome: {prob_each_outcome:.4f}")`}
+</CodeBlock>
+
+For more complex sample spaces, we might need different representations:
+
+<CodeBlock filename="complex_sample_spaces.py" lang="python">
+{`# Sample space for two coin flips
+sample_space_coins = [('H', 'H'), ('H', 'T'), ('T', 'H'), ('T', 'T')]
+
+# Sample space for drawing cards (simplified representation)
+suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+sample_space_cards = [(rank, suit) for suit in suits for rank in ranks]
+print(f"Total cards in deck: {len(sample_space_cards)}")`}
+</CodeBlock>
+
+### Event Definition and Manipulation
+
+Events are subsets of the sample space, and Python's set operations provide natural tools for event manipulation:
+
+<CodeBlock filename="event_operations.py" lang="python">
+{`# Define events for die rolling
+sample_space = set(range(1, 7))
+event_even = {2, 4, 6}
+event_greater_than_3 = {4, 5, 6}
+event_prime = {2, 3, 5}
+
+# Event operations using set operations
+union_event = event_even | event_greater_than_3  # Union (OR)
+intersection_event = event_even & event_greater_than_3  # Intersection (AND)
+complement_even = sample_space - event_even  # Complement (NOT)
+
+print(f"Even numbers: {event_even}")
+print(f"Greater than 3: {event_greater_than_3}")
+print(f"Even OR greater than 3: {union_event}")
+print(f"Even AND greater than 3: {intersection_event}")
+print(f"NOT even (odd numbers): {complement_even}")`}
+</CodeBlock>
+
+## The Law of Large Numbers: Simulation and Convergence
+
+The Law of Large Numbers is one of the most fundamental results in probability theory, and simulation provides an excellent way to understand its practical implications.
+
+<Callout variant="theorem">
+**Theoretical Statement:** As the number of independent trials increases, the sample average converges to the expected value (population mean).
+
+**Practical Significance:** This law justifies using simulation to estimate probabilities and expected values, and it explains why larger samples generally provide more accurate estimates.
+</Callout>
+
+### Demonstrating Convergence Through Simulation
+
+<CodeBlock filename="law_of_large_numbers.py" lang="python">
+{`def demonstrate_law_of_large_numbers():
+    """Demonstrate the Law of Large Numbers with die rolling"""
+    # Simulate rolling a die many times
+    n_rolls = 10000
+    rolls = np.random.randint(1, 7, n_rolls)
+    
+    # Calculate cumulative average
+    cumulative_average = np.cumsum(rolls) / np.arange(1, n_rolls + 1)
+    
+    # Theoretical expected value
+    theoretical_mean = 3.5  # (1+2+3+4+5+6)/6
+    
+    # Create visualization
+    plt.figure(figsize=(12, 8))
+    
+    # Plot convergence
+    plt.subplot(2, 2, 1)
+    plt.plot(range(1, n_rolls + 1), cumulative_average, 'b-', alpha=0.7)
+    plt.axhline(y=theoretical_mean, color='red', linestyle='--', 
+                label=f'Theoretical mean: {theoretical_mean}')
+    plt.xlabel('Number of Rolls')
+    plt.ylabel('Cumulative Average')
+    plt.title('Law of Large Numbers: Die Rolling')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xscale('log')
+    
+    # Show final convergence
+    final_average = cumulative_average[-1]
+    print(f"After {n_rolls} rolls:")
+    print(f"Sample average: {final_average:.4f}")
+    print(f"Theoretical average: {theoretical_mean:.4f}")
+    print(f"Difference: {abs(final_average - theoretical_mean):.4f}")
+    
+    return rolls, cumulative_average
+
+# Run the demonstration
+rolls, convergence = demonstrate_law_of_large_numbers()`}
+</CodeBlock>
+
+### Probability Estimation Through Frequency
+
+<CodeBlock filename="frequency_estimation.py" lang="python">
+{`def estimate_probabilities_by_frequency(rolls):
+    """Estimate probabilities using relative frequencies"""
+    # Count frequencies of each outcome
+    frequencies = Counter(rolls)
+    n_total = len(rolls)
+    
+    print("Probability Estimation Results:")
+    print("Outcome | Frequency | Observed Prob | Theoretical Prob | Difference")
+    print("-" * 70)
+    
+    for outcome in range(1, 7):
+        freq = frequencies[outcome]
+        observed_prob = freq / n_total
+        theoretical_prob = 1/6
+        difference = abs(observed_prob - theoretical_prob)
+        print(f"   {outcome}    |    {freq:4d}    |    {observed_prob:.4f}    |"
+              f"     {theoretical_prob:.4f}      |   {difference:.4f}")
+    
+    return frequencies
+
+# Estimate probabilities from our simulation
+frequencies = estimate_probabilities_by_frequency(rolls)`}
+</CodeBlock>
+
+## Conditional Probability: The Foundation of Learning
+
+Conditional probability represents how we update our beliefs when we receive new information. This concept is fundamental to machine learning, statistical inference, and decision-making under uncertainty.
+
+### Card Deck Example: Computing Conditional Probabilities
+
+<CodeBlock filename="conditional_probability_cards.py" lang="python">
+{`def conditional_probability_cards():
+    """Demonstrate conditional probability with card deck"""
+    # Create deck of cards
+    suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+    ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+    deck = [(rank, suit) for suit in suits for rank in ranks]
+    total_cards = len(deck)
+    
+    print(f"Total cards in deck: {total_cards}")
+    
+    # Define events
+    kings = [card for card in deck if card[0] == 'K']
+    hearts = [card for card in deck if card[1] == 'Hearts']
+    king_of_hearts = [card for card in deck if card[0] == 'K' and card[1] == 'Hearts']
+    
+    # Calculate basic probabilities
+    prob_king = len(kings) / total_cards
+    prob_heart = len(hearts) / total_cards
+    prob_king_and_heart = len(king_of_hearts) / total_cards
+    
+    # Calculate conditional probability: P(King | Heart)
+    prob_king_given_heart = prob_king_and_heart / prob_heart
+    
+    print(f"\\nBasic Probabilities:")
+    print(f"P(King) = {prob_king:.4f}")
+    print(f"P(Heart) = {prob_heart:.4f}")
+    print(f"P(King and Heart) = {prob_king_and_heart:.4f}")
+    
+    print(f"\\nConditional Probability:")
+    print(f"P(King | Heart) = {prob_king_given_heart:.4f}")
+    
+    # Verify using direct counting
+    kings_in_hearts = len([card for card in hearts if card[0] == 'K'])
+    direct_conditional = kings_in_hearts / len(hearts)
+    print(f"Direct calculation: {direct_conditional:.4f}")
+    
+    return prob_king_given_heart
+
+# Demonstrate conditional probability
+conditional_prob = conditional_probability_cards()`}
+</CodeBlock>
+
+### Medical Diagnosis: A Practical Application
+
+Medical diagnosis provides an excellent example of conditional probability in action, illustrating the difference between sensitivity, specificity, and positive predictive value.
+
+<CodeBlock filename="medical_diagnosis.py" lang="python">
+{`def medical_diagnosis_example():
+    """Demonstrate Bayes' theorem in medical diagnosis"""
+    # Test and disease parameters
+    disease_prevalence = 0.01  # 1% of population has disease
+    test_sensitivity = 0.95    # P(positive test | disease)
+    test_specificity = 0.90    # P(negative test | no disease)
+    
+    print("Medical Diagnosis Example")
+    print("=" * 40)
+    print(f"Disease prevalence: {disease_prevalence:.1%}")
+    print(f"Test sensitivity: {test_sensitivity:.1%}")
+    print(f"Test specificity: {test_specificity:.1%}")
+    
+    # Calculate using Bayes' theorem
+    # P(positive test | no disease) = 1 - specificity
+    prob_positive_given_no_disease = 1 - test_specificity
+    
+    # P(positive test) using law of total probability
+    prob_positive = (test_sensitivity * disease_prevalence + 
+                    prob_positive_given_no_disease * (1 - disease_prevalence))
+    
+    # P(disease | positive test) using Bayes' theorem
+    prob_disease_given_positive = (test_sensitivity * disease_prevalence) / prob_positive
+    
+    print(f"\\nResults:")
+    print(f"P(positive test) = {prob_positive:.4f}")
+    print(f"P(disease | positive test) = {prob_disease_given_positive:.4f}")
+    print(f"This means only {prob_disease_given_positive*100:.1f}% of positive tests indicate disease!")
+    
+    # Simulation to verify calculation
+    n_patients = 100000
+    has_disease = np.random.random(n_patients) < disease_prevalence
+    
+    # Simulate test results
+    test_results = np.zeros(n_patients, dtype=bool)
+    
+    # Patients with disease
+    diseased_patients = np.where(has_disease)[0]
+    test_results[diseased_patients] = np.random.random(len(diseased_patients)) < test_sensitivity
+    
+    # Patients without disease
+    healthy_patients = np.where(~has_disease)[0]
+    test_results[healthy_patients] = np.random.random(len(healthy_patients)) < prob_positive_given_no_disease
+    
+    # Calculate empirical probabilities
+    positive_tests = np.sum(test_results)
+    true_positives = np.sum(has_disease & test_results)
+    empirical_ppv = true_positives / positive_tests if positive_tests > 0 else 0
+    
+    print(f"\\nSimulation Results (n={n_patients:,}):")
+    print(f"Empirical P(disease | positive test) = {empirical_ppv:.4f}")
+    print(f"Difference from theoretical: {abs(empirical_ppv - prob_disease_given_positive):.4f}")
+    
+    return prob_disease_given_positive, empirical_ppv
+
+# Run medical diagnosis example
+theoretical_ppv, empirical_ppv = medical_diagnosis_example()`}
+</CodeBlock>
+
+## Independence and Its Implications
+
+Independence is a crucial concept that simplifies many probabilistic calculations, but it's often misunderstood or incorrectly assumed in practice.
+
+### Testing for Independence
+
+<CodeBlock filename="independence_testing.py" lang="python">
+{`def test_independence_example():
+    """Demonstrate independence testing with coin flips"""
+    # Generate independent coin flips
+    n_flips = 10000
+    coin1 = np.random.binomial(1, 0.5, n_flips)  # Fair coin
+    coin2 = np.random.binomial(1, 0.5, n_flips)  # Independent fair coin
+    
+    # Create dependent coins (second coin biased by first)
+    coin3 = np.random.binomial(1, 0.5, n_flips)  # Fair coin
+    # Coin 4 is more likely to be heads if coin 3 is heads
+    prob_coin4_given_coin3 = np.where(coin3 == 1, 0.8, 0.2)
+    coin4 = np.random.binomial(1, prob_coin4_given_coin3)
+    
+    def calculate_independence_metrics(x, y):
+        """Calculate metrics to assess independence"""
+        # Joint probabilities
+        p_both_1 = np.mean((x == 1) & (y == 1))
+        p_both_0 = np.mean((x == 0) & (y == 0))
+        p_x1_y0 = np.mean((x == 1) & (y == 0))
+        p_x0_y1 = np.mean((x == 0) & (y == 1))
+        
+        # Marginal probabilities
+        p_x1 = np.mean(x == 1)
+        p_y1 = np.mean(y == 1)
+        
+        # Test independence: P(X=1, Y=1) should equal P(X=1) * P(Y=1)
+        expected_joint = p_x1 * p_y1
+        independence_test = abs(p_both_1 - expected_joint)
+        
+        return {
+            'joint_11': p_both_1,
+            'marginal_x1': p_x1,
+            'marginal_y1': p_y1,
+            'expected_joint': expected_joint,
+            'independence_deviation': independence_test
+        }
+    
+    # Test independent coins
+    independent_metrics = calculate_independence_metrics(coin1, coin2)
+    print("Independent Coins Analysis:")
+    print(f"P(X=1, Y=1) = {independent_metrics['joint_11']:.4f}")
+    print(f"P(X=1) * P(Y=1) = {independent_metrics['expected_joint']:.4f}")
+    print(f"Independence deviation = {independent_metrics['independence_deviation']:.4f}")
+    
+    # Test dependent coins
+    dependent_metrics = calculate_independence_metrics(coin3, coin4)
+    print("\\nDependent Coins Analysis:")
+    print(f"P(X=1, Y=1) = {dependent_metrics['joint_11']:.4f}")
+    print(f"P(X=1) * P(Y=1) = {dependent_metrics['expected_joint']:.4f}")
+    print(f"Independence deviation = {dependent_metrics['independence_deviation']:.4f}")
+    
+    # Chi-square test for independence
+    from scipy.stats import chi2_contingency
+    
+    # Create contingency tables
+    def create_contingency_table(x, y):
+        table = np.zeros((2, 2))
+        table[0, 0] = np.sum((x == 0) & (y == 0))  # Both 0
+        table[0, 1] = np.sum((x == 0) & (y == 1))  # X=0, Y=1
+        table[1, 0] = np.sum((x == 1) & (y == 0))  # X=1, Y=0
+        table[1, 1] = np.sum((x == 1) & (y == 1))  # Both 1
+        return table
+    
+    # Test independent coins
+    table_independent = create_contingency_table(coin1, coin2)
+    chi2_indep, p_val_indep, _, _ = chi2_contingency(table_independent)
+    
+    # Test dependent coins
+    table_dependent = create_contingency_table(coin3, coin4)
+    chi2_dep, p_val_dep, _, _ = chi2_contingency(table_dependent)
+    
+    print(f"\\nChi-square Independence Tests:")
+    print(f"Independent coins: χ² = {chi2_indep:.4f}, p-value = {p_val_indep:.4f}")
+    print(f"Dependent coins: χ² = {chi2_dep:.4f}, p-value = {p_val_dep:.4f}")
+    
+    return independent_metrics, dependent_metrics
+
+# Run independence test
+indep_metrics, dep_metrics = test_independence_example()`}
+</CodeBlock>
+
+## Random Variables: From Outcomes to Numbers
+
+Random variables provide the bridge between abstract probability spaces and numerical analysis. Understanding how to work with random variables computationally is essential for practical probability applications.
+
+### Discrete Random Variables
+
+<CodeBlock filename="discrete_random_variables.py" lang="python">
+{`def discrete_random_variable_example():
+    """Demonstrate discrete random variables with coin flips"""
+    print("Discrete Random Variable: Number of Heads in 3 Coin Flips")
+    print("=" * 60)
+    
+    # Define the random variable X = number of heads in 3 flips
+    n_flips = 3
+    p_heads = 0.5
+    
+    # Calculate theoretical probabilities using binomial distribution
+    outcomes = list(range(n_flips + 1))  # 0, 1, 2, 3 heads
+    probabilities = [stats.binom.pmf(k, n_flips, p_heads) for k in outcomes]
+    
+    print("Theoretical Probability Mass Function:")
+    for k, prob in zip(outcomes, probabilities):
+        print(f"P(X = {k}) = {prob:.4f}")
+    
+    # Verify probabilities sum to 1
+    total_prob = sum(probabilities)
+    print(f"\\nSum of probabilities: {total_prob:.4f}")
+    
+    # Calculate expected value and variance
+    expected_value = sum(k * p for k, p in zip(outcomes, probabilities))
+    variance = sum((k - expected_value)**2 * p for k, p in zip(outcomes, probabilities))
+    std_deviation = np.sqrt(variance)
+    
+    print(f"\\nTheoretical Moments:")
+    print(f"Expected value E[X]: {expected_value:.4f}")
+    print(f"Variance Var(X): {variance:.4f}")
+    print(f"Standard deviation: {std_deviation:.4f}")
+    
+    # Compare with binomial formulas
+    theoretical_mean = n_flips * p_heads
+    theoretical_var = n_flips * p_heads * (1 - p_heads)
+    print(f"\\nBinomial Distribution Formulas:")
+    print(f"μ = np = {theoretical_mean:.4f}")
+    print(f"σ² = np(1-p) = {theoretical_var:.4f}")
+    
+    # Simulation to verify theoretical results
+    n_simulations = 100000
+    simulation_results = []
+    for _ in range(n_simulations):
+        flips = np.random.binomial(1, p_heads, n_flips)
+        heads_count = np.sum(flips)
+        simulation_results.append(heads_count)
+    
+    simulation_results = np.array(simulation_results)
+    
+    # Calculate empirical probabilities
+    empirical_probs = []
+    print(f"\\nSimulation Results (n={n_simulations:,}):")
+    print("Outcome | Theoretical | Empirical | Difference")
+    print("-" * 50)
+    
+    for k in outcomes:
+        empirical_prob = np.mean(simulation_results == k)
+        theoretical_prob = probabilities[k]
+        difference = abs(empirical_prob - theoretical_prob)
+        empirical_probs.append(empirical_prob)
+        print(f"   {k}    |   {theoretical_prob:.4f}    |  {empirical_prob:.4f}  |  {difference:.4f}")
+    
+    # Empirical moments
+    empirical_mean = np.mean(simulation_results)
+    empirical_var = np.var(simulation_results)
+    print(f"\\nEmpirical Moments:")
+    print(f"Sample mean: {empirical_mean:.4f} (theoretical: {expected_value:.4f})")
+    print(f"Sample variance: {empirical_var:.4f} (theoretical: {variance:.4f})")
+    
+    return outcomes, probabilities, simulation_results
+
+# Run discrete random variable example
+outcomes, probs, sim_results = discrete_random_variable_example()`}
+</CodeBlock>
+
+### Continuous Random Variables
+
+<CodeBlock filename="continuous_random_variables.py" lang="python">
+{`def continuous_random_variable_example():
+    """Demonstrate continuous random variables with normal distribution"""
+    print("\\nContinuous Random Variable: Standard Normal Distribution")
+    print("=" * 60)
+    
+    # Parameters for standard normal distribution
+    mu, sigma = 0, 1
+    
+    # Generate samples
+    n_samples = 10000
+    samples = np.random.normal(mu, sigma, n_samples)
+    
+    # Calculate empirical statistics
+    sample_mean = np.mean(samples)
+    sample_std = np.std(samples, ddof=1)  # Sample standard deviation
+    
+    print(f"Sample Statistics (n={n_samples:,}):")
+    print(f"Sample mean: {sample_mean:.4f} (theoretical: {mu})")
+    print(f"Sample std: {sample_std:.4f} (theoretical: {sigma})")
+    
+    # Probability calculations using CDF
+    print(f"\\nProbability Calculations:")
+    
+    # P(X ≤ 0)
+    prob_less_than_0 = stats.norm.cdf(0, mu, sigma)
+    empirical_prob_less_than_0 = np.mean(samples <= 0)
+    print(f"P(X ≤ 0): theoretical = {prob_less_than_0:.4f}, "
+          f"empirical = {empirical_prob_less_than_0:.4f}")
+    
+    # P(-1 ≤ X ≤ 1)
+    prob_between_minus1_and_1 = stats.norm.cdf(1, mu, sigma) - stats.norm.cdf(-1, mu, sigma)
+    empirical_prob_between = np.mean((-1 <= samples) & (samples <= 1))
+    print(f"P(-1 ≤ X ≤ 1): theoretical = {prob_between_minus1_and_1:.4f}, "
+          f"empirical = {empirical_prob_between:.4f}")
+    
+    # Quantiles
+    print(f"\\nQuantiles:")
+    for percentile in [25, 50, 75, 95, 99]:
+        theoretical_quantile = stats.norm.ppf(percentile/100, mu, sigma)
+        empirical_quantile = np.percentile(samples, percentile)
+        print(f"{percentile}th percentile: theoretical = {theoretical_quantile:.4f}, "
+              f"empirical = {empirical_quantile:.4f}")
+    
+    return samples
+
+# Run continuous random variable example
+normal_samples = continuous_random_variable_example()`}
+</CodeBlock>
+
+## Visualization of Probability Concepts
+
+Effective visualization is crucial for understanding probability concepts. Let's create comprehensive visualizations that illustrate the concepts we've discussed.
+
+<CodeBlock filename="probability_visualizations.py" lang="python">
+{`def create_probability_visualizations():
+    """Create comprehensive visualizations of basic probability concepts"""
+    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    
+    # 1. Law of Large Numbers
+    n_rolls = 10000
+    rolls = np.random.randint(1, 7, n_rolls)
+    cumulative_avg = np.cumsum(rolls) / np.arange(1, n_rolls + 1)
+    
+    axes[0, 0].plot(range(1, n_rolls + 1), cumulative_avg, 'b-', alpha=0.7)
+    axes[0, 0].axhline(y=3.5, color='red', linestyle='--', label='Theoretical mean: 3.5')
+    axes[0, 0].set_xlabel('Number of Rolls')
+    axes[0, 0].set_ylabel('Cumulative Average')
+    axes[0, 0].set_title('Law of Large Numbers')
+    axes[0, 0].legend()
+    axes[0, 0].grid(True, alpha=0.3)
+    axes[0, 0].set_xscale('log')
+    
+    # 2. Probability Mass Function (Binomial)
+    n, p = 10, 0.3
+    k_values = np.arange(0, n + 1)
+    pmf_values = stats.binom.pmf(k_values, n, p)
+    
+    axes[0, 1].bar(k_values, pmf_values, alpha=0.7, color='skyblue', edgecolor='black')
+    axes[0, 1].set_xlabel('Number of Successes (k)')
+    axes[0, 1].set_ylabel('Probability')
+    axes[0, 1].set_title(f'Binomial PMF (n={n}, p={p})')
+    axes[0, 1].grid(True, alpha=0.3)
+    
+    # 3. Probability Density Function (Normal)
+    x = np.linspace(-4, 4, 100)
+    pdf_values = stats.norm.pdf(x, 0, 1)
+    
+    axes[0, 2].plot(x, pdf_values, 'b-', linewidth=2, label='PDF')
+    axes[0, 2].fill_between(x, pdf_values, alpha=0.3)
+    
+    # Highlight P(-1 ≤ X ≤ 1)
+    x_fill = x[(x >= -1) & (x <= 1)]
+    y_fill = stats.norm.pdf(x_fill, 0, 1)
+    axes[0, 2].fill_between(x_fill, y_fill, alpha=0.7, color='red', 
+                           label='P(-1 ≤ X ≤ 1)')
+    axes[0, 2].set_xlabel('x')
+    axes[0, 2].set_ylabel('Probability Density')
+    axes[0, 2].set_title('Standard Normal Distribution')
+    axes[0, 2].legend()
+    axes[0, 2].grid(True, alpha=0.3)
+    
+    # 4. Conditional Probability Visualization
+    # Create a 2x2 contingency table for visualization
+    categories = ['Disease\\n& +', 'Disease\\n& -', 'No Disease\\n& +', 'No Disease\\n& -']
+    prob_disease = 0.01
+    sensitivity = 0.95
+    specificity = 0.90
+    
+    joint_probs = [
+        prob_disease * sensitivity,  # Disease & +
+        prob_disease * (1 - sensitivity),  # Disease & -
+        (1 - prob_disease) * (1 - specificity),  # No Disease & +
+        (1 - prob_disease) * specificity  # No Disease & -
+    ]
+    
+    colors = ['red', 'pink', 'orange', 'lightgreen']
+    bars = axes[1, 0].bar(categories, joint_probs, color=colors, alpha=0.7, edgecolor='black')
+    axes[1, 0].set_ylabel('Probability')
+    axes[1, 0].set_title('Medical Testing: Joint Probabilities')
+    axes[1, 0].tick_params(axis='x', rotation=45)
+    
+    # Add value labels on bars
+    for bar, prob in zip(bars, joint_probs):
+        height = bar.get_height()
+        axes[1, 0].text(bar.get_x() + bar.get_width()/2., height + 0.002,
+                       f'{prob:.4f}', ha='center', va='bottom')
+    
+    # 5. Independence vs Dependence
+    # Generate correlated data for visualization
+    np.random.seed(42)
+    n_points = 1000
+    
+    # Independent data
+    x_indep = np.random.normal(0, 1, n_points)
+    y_indep = np.random.normal(0, 1, n_points)
+    
+    axes[1, 1].scatter(x_indep, y_indep, alpha=0.5, s=10)
+    axes[1, 1].set_xlabel('X')
+    axes[1, 1].set_ylabel('Y')
+    axes[1, 1].set_title('Independent Variables')
+    axes[1, 1].grid(True, alpha=0.3)
+    
+    # 6. Central Limit Theorem Preview
+    # Sample means from uniform distribution
+    n_samples = 1000
+    sample_sizes = [1, 5, 30]
+    
+    for i, n in enumerate(sample_sizes):
+        sample_means = []
+        for _ in range(n_samples):
+            sample = np.random.uniform(0, 1, n)
+            sample_means.append(np.mean(sample))
+        axes[1, 2].hist(sample_means, bins=30, alpha=0.5, density=True, 
+                       label=f'n={n}')
+    
+    axes[1, 2].set_xlabel('Sample Mean')
+    axes[1, 2].set_ylabel('Density')
+    axes[1, 2].set_title('Central Limit Theorem Preview')
+    axes[1, 2].legend()
+    axes[1, 2].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('basic_probability_concepts.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+# Create visualizations
+create_probability_visualizations()`}
+</CodeBlock>
+## Key Takeaways
+
+The concepts we've explored in this section form the foundation for all subsequent probabilistic analysis. Through Python implementation, we've seen how abstract mathematical concepts translate into concrete computational tools that can solve real problems.
+
+<Callout variant="tip">
+**Essential Concepts Mastered:**
+- ✅ Sample spaces and event operations using Python sets
+- ✅ Law of Large Numbers through simulation and visualization
+- ✅ Conditional probability with real-world medical diagnosis examples
+- ✅ Independence testing using statistical methods
+- ✅ Random variables (discrete and continuous) with empirical validation
+- ✅ Comprehensive probability visualizations
+</Callout>
+
+Understanding these basic concepts deeply is crucial because they appear repeatedly in more sophisticated applications. Whether we're building machine learning models, conducting statistical analyses, or solving complex optimization problems, the principles of sample spaces, conditional probability, independence, and random variables provide the conceptual framework that guides our approach.
+
+<Callout variant="note">
+**Why This Matters:** The combination of theoretical understanding and practical implementation provides a solid foundation for the more advanced topics we'll explore in subsequent sections. The ability to simulate, visualize, and validate probabilistic concepts computationally is what transforms abstract mathematics into powerful problem-solving tools.
+</Callout>
+
+In the next section, we'll build on these foundations to explore probability distributions in detail, showing how different types of uncertainty can be modeled mathematically and implemented computationally.
+
+<Pager 
+  prev={{ title: "Python Environment Setup", href: "/python-setup" }}
+  next={{ title: "Random Variables", href: "/random-variables" }}
+/>
