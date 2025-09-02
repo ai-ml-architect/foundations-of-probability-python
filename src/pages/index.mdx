@@ -1,0 +1,307 @@
+---
+layout: ../layouts/Base.astro
+title: "Foundations of Probability in Python"
+description: "Master probability—one rigorous, runnable example at a time. From Kolmogorov's axioms to PyMC and Monte Carlo, learn probability the right way—math first, code always."
+---
+
+import Prose from '../components/ui/Prose.astro';
+import Callout from '../components/ui/Callout.astro';
+import Figure from '../components/ui/Figure.astro';
+
+<div class="relative">
+  {/* Hero Section */}
+  <section class="relative py-20 lg:py-32 overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"></div>
+    <div class="relative container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-5xl lg:text-7xl font-display font-bold tracking-tight mb-8">
+          <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+            Foundations of Probability
+          </span>
+          <br />
+          <span class="text-foreground">in Python</span>
+        </h1>
+        
+        <p class="text-xl lg:text-2xl text-muted-foreground mb-12 leading-relaxed">
+          Master probability—one rigorous, runnable example at a time.<br />
+          From Kolmogorov's axioms to PyMC and Monte Carlo, learn probability the right way—math first, code always.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <a 
+            href="/introduction" 
+            class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            Start Learning
+            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </a>
+          <a 
+            href="/foundations" 
+            class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors border"
+          >
+            Browse Chapters
+            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Chapter Cards */}
+  <section class="py-20 bg-muted/30">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl lg:text-4xl font-display font-bold text-center mb-4">
+          Comprehensive Learning Path
+        </h2>
+        <p class="text-lg text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
+          Six carefully structured chapters that build from mathematical foundations to real-world applications, 
+          with hands-on Python implementations throughout.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Chapter 1 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-2xl">
+                📐
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Mathematical Foundations</h3>
+                <p class="text-sm text-muted-foreground">Chapter 1</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Kolmogorov's axioms, probability spaces, conditional probability, and Bayes' theorem with rigorous mathematical treatment.
+            </p>
+            <a href="/foundations" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              Explore Foundations →
+            </a>
+          </div>
+
+          {/* Chapter 2 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-2xl">
+                🐍
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Python Environment</h3>
+                <p class="text-sm text-muted-foreground">Chapter 2</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Complete setup guide for NumPy, SciPy, Matplotlib, pandas, and specialized probabilistic programming libraries.
+            </p>
+            <a href="/python-setup" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              Setup Environment →
+            </a>
+          </div>
+
+          {/* Chapter 3 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-2xl">
+                🎲
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Random Variables</h3>
+                <p class="text-sm text-muted-foreground">Chapter 3</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Discrete and continuous distributions, PMF/PDF/CDF, expectation, variance, and canonical probability distributions.
+            </p>
+            <a href="/random-variables" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              Learn Distributions →
+            </a>
+          </div>
+
+          {/* Chapter 4 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center text-2xl">
+                🎯
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Monte Carlo Methods</h3>
+                <p class="text-sm text-muted-foreground">Chapter 4</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Simulation techniques, variance reduction, convergence diagnostics, and parallelization for large-scale problems.
+            </p>
+            <a href="/monte-carlo" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              Master Simulation →
+            </a>
+          </div>
+
+          {/* Chapter 5 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center text-2xl">
+                🧠
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Bayesian Inference</h3>
+                <p class="text-sm text-muted-foreground">Chapter 5</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Prior/likelihood/posterior, PyMC basics with NUTS/HMC samplers, model diagnostics, and practical applications.
+            </p>
+            <a href="/bayesian" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              Explore Bayesian →
+            </a>
+          </div>
+
+          {/* Chapter 6 */}
+          <div class="group bg-background border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center text-2xl">
+                🏢
+              </div>
+              <div class="ml-4">
+                <h3 class="font-display font-semibold text-lg">Real-World Applications</h3>
+                <p class="text-sm text-muted-foreground">Chapter 6</p>
+              </div>
+            </div>
+            <p class="text-muted-foreground mb-4">
+              Finance & risk management, healthcare diagnostics, engineering reliability, and data science case studies.
+            </p>
+            <a href="/applications" class="text-primary hover:text-primary/80 font-medium text-sm group-hover:underline">
+              See Applications →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* What You'll Learn */}
+  <section class="py-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl lg:text-4xl font-display font-bold text-center mb-16">
+          What You'll Learn
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="space-y-6">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Foundational Understanding</h3>
+                <p class="text-muted-foreground">Grasp fundamental concepts including sample spaces, events, conditional probability, and Bayes' theorem with real-world connections.</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Computational Proficiency</h3>
+                <p class="text-muted-foreground">Implement probabilistic models using Python's scientific computing ecosystem including NumPy, SciPy, and specialized frameworks.</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Applied Problem-Solving</h3>
+                <p class="text-muted-foreground">Apply probabilistic methods to solve real-world problems across finance, healthcare, engineering, and data science domains.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-6">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Advanced Techniques</h3>
+                <p class="text-muted-foreground">Master Monte Carlo simulation, Bayesian inference, and modern computational approaches to statistical modeling.</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Critical Evaluation</h3>
+                <p class="text-muted-foreground">Develop skills to critically evaluate probabilistic models, understand limitations, and communicate results effectively.</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold mb-2">Ethical Considerations</h3>
+                <p class="text-muted-foreground">Understand responsible use of probabilistic methods and the ethical implications of uncertainty quantification in decision-making.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* Call to Action */}
+  <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto text-center text-white">
+        <h2 class="text-3xl lg:text-4xl font-display font-bold mb-6">
+          Ready to Master Probability Theory?
+        </h2>
+        <p class="text-xl mb-8 opacity-90">
+          Join thousands of students, researchers, and practitioners who have transformed their understanding of uncertainty through rigorous, hands-on learning.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a 
+            href="/introduction" 
+            class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-blue-600 bg-white hover:bg-gray-50 rounded-lg transition-colors shadow-lg hover:shadow-xl"
+          >
+            Begin Your Journey
+            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </a>
+          <a 
+            href="/labs" 
+            class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white/30 hover:border-white/50 rounded-lg transition-colors"
+          >
+            Explore Labs
+            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
