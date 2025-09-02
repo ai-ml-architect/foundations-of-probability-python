@@ -1,0 +1,865 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: "Real-World Applications"
+description: "Explore probability applications in finance, healthcare, engineering, and data science with practical Python examples"
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Figure from '../components/ui/Figure.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'finance-risk-management', text: 'Finance and Risk Management' },
+  { depth: 2, slug: 'healthcare-medical-diagnosis', text: 'Healthcare and Medical Diagnosis' },
+  { depth: 2, slug: 'engineering-reliability', text: 'Engineering and Reliability Analysis' },
+  { depth: 2, slug: 'data-science-ml', text: 'Data Science and Machine Learning' },
+  { depth: 2, slug: 'key-takeaways', text: 'Key Takeaways' }
+]} />
+
+# Real-World Applications
+
+Probability theory finds applications across virtually every quantitative field. This chapter explores practical implementations in finance, healthcare, engineering, and data science.
+
+<Callout variant="note">
+**Learning Objectives**
+
+By the end of this chapter, you will:
+- Apply probability to financial risk management
+- Understand medical diagnostic accuracy
+- Model engineering reliability and failure
+- Implement probabilistic machine learning methods
+</Callout>
+
+## Finance and Risk Management
+
+Financial markets are inherently uncertain, making probability theory essential for risk assessment, portfolio optimization, and derivative pricing.
+
+### Value at Risk (VaR) Calculation
+
+Value at Risk quantifies the potential loss in a portfolio over a specific time horizon at a given confidence level.
+
+```python
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+import seaborn as sns
+
+# Simulate portfolio returns
+np.random.seed(42)
+n_days = 1000
+n_assets = 3
+
+# Asset parameters (annual)
+annual_returns = np.array([0.08, 0.12, 0.15])
+annual_volatilities = np.array([0.15, 0.25, 0.30])
+correlation_matrix = np.array([
+    [1.0, 0.3, 0.2],
+    [0.3, 1.0, 0.4],
+    [0.2, 0.4, 1.0]
+])
+
+# Convert to daily parameters
+daily_returns = annual_returns / 252
+daily_volatilities = annual_volatilities / np.sqrt(252)
+
+# Generate correlated returns using Cholesky decomposition
+L = np.linalg.cholesky(correlation_matrix)
+independent_shocks = np.random.normal(0, 1, (n_days, n_assets))
+correlated_shocks = independent_shocks @ L.T
+
+# Calculate daily returns
+returns = daily_returns + daily_volatilities * correlated_shocks
+
+# Portfolio weights
+weights = np.array([0.4, 0.4, 0.2])
+portfolio_returns = returns @ weights
+
+print("Portfolio Statistics:")
+print(f"Daily mean return: {np.mean(portfolio_returns):.4f}")
+print(f"Daily volatility: {np.std(portfolio_returns):.4f}")
+print(f"Annualized Sharpe ratio: {np.mean(portfolio_returns) / np.std(portfolio_returns) * np.sqrt(252):.2f}")
+
+# Calculate VaR using different methods
+confidence_levels = [0.95, 0.99]
+portfolio_value = 1000000  # $1M portfolio
+
+print(f"\nValue at Risk (Portfolio Value: ${portfolio_value:,})")
+print("Method          | 95% VaR    | 99% VaR")
+print("-" * 40)
+
+# Historical VaR
+for conf in confidence_levels:
+    var_historical = np.percentile(portfolio_returns, (1-conf)*100) * portfolio_value
+    print(f"Historical      | ${abs(var_historical):8,.0f} | ", end="")
+print()
+
+# Parametric VaR (assuming normal distribution)
+mean_return = np.mean(portfolio_returns)
+std_return = np.std(portfolio_returns)
+
+for conf in confidence_levels:
+    z_score = stats.norm.ppf(1-conf)
+    var_parametric = (mean_return + z_score * std_return) * portfolio_value
+    print(f"Parametric      | ${abs(var_parametric):8,.0f} | ", end="")
+print()
+
+# Monte Carlo VaR
+n_simulations = 10000
+simulated_returns = np.random.normal(mean_return, std_return, n_simulations)
+
+for conf in confidence_levels:
+    var_monte_carlo = np.percentile(simulated_returns, (1-conf)*100) * portfolio_value
+    print(f"Monte Carlo     | ${abs(var_monte_carlo):8,.0f} | ", end="")
+print()
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+
+# Portfolio returns over time
+axes[0, 0].plot(np.cumsum(portfolio_returns))
+axes[0, 0].set_title('Cumulative Portfolio Returns')
+axes[0, 0].set_xlabel('Days')
+axes[0, 0].set_ylabel('Cumulative Return')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Return distribution
+axes[0, 1].hist(portfolio_returns, bins=50, alpha=0.7, density=True, label='Historical')
+x = np.linspace(portfolio_returns.min(), portfolio_returns.max(), 100)
+y = stats.norm.pdf(x, mean_return, std_return)
+axes[0, 1].plot(x, y, 'r-', label='Normal fit')
+axes[0, 1].axvline(np.percentile(portfolio_returns, 5), color='red', 
+                   linestyle='--', label='5% VaR')
+axes[0, 1].set_title('Return Distribution')
+axes[0, 1].set_xlabel('Daily Return')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Rolling VaR
+window = 252  # 1 year
+rolling_var = []
+for i in range(window, len(portfolio_returns)):
+    window_returns = portfolio_returns[i-window:i]
+    var_95 = np.percentile(window_returns, 5)
+    rolling_var.append(var_95)
+
+axes[1, 0].plot(rolling_var)
+axes[1, 0].set_title('Rolling 95% VaR (1-year window)')
+axes[1, 0].set_xlabel('Days')
+axes[1, 0].set_ylabel('VaR')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Correlation heatmap
+axes[1, 1].imshow(correlation_matrix, cmap='coolwarm', vmin=-1, vmax=1)
+axes[1, 1].set_title('Asset Correlation Matrix')
+for i in range(n_assets):
+    for j in range(n_assets):
+        axes[1, 1].text(j, i, f'{correlation_matrix[i, j]:.1f}', 
+                        ha='center', va='center')
+
+plt.tight_layout()
+plt.show()
+```
+
+### Credit Risk Modeling
+
+Model the probability of default using logistic regression and survival analysis.
+
+```python
+# Simulate credit data
+np.random.seed(42)
+n_borrowers = 5000
+
+# Generate borrower characteristics
+credit_score = np.random.normal(650, 100, n_borrowers)
+debt_to_income = np.random.lognormal(np.log(0.3), 0.5, n_borrowers)
+loan_amount = np.random.lognormal(np.log(50000), 0.8, n_borrowers)
+employment_length = np.random.exponential(5, n_borrowers)
+
+# Create default probability based on risk factors
+logit_p = (-5 + 
+           -0.01 * (credit_score - 600) +  # Higher score = lower risk
+           3 * debt_to_income +             # Higher DTI = higher risk
+           0.00001 * loan_amount +          # Larger loans = slightly higher risk
+           -0.1 * employment_length)        # Longer employment = lower risk
+
+default_prob = 1 / (1 + np.exp(-logit_p))
+defaults = np.random.binomial(1, default_prob, n_borrowers)
+
+# Create DataFrame
+credit_data = pd.DataFrame({
+    'credit_score': credit_score,
+    'debt_to_income': debt_to_income,
+    'loan_amount': loan_amount,
+    'employment_length': employment_length,
+    'default': defaults
+})
+
+print("Credit Risk Analysis:")
+print(f"Total borrowers: {n_borrowers:,}")
+print(f"Default rate: {np.mean(defaults):.2%}")
+
+# Logistic regression for default prediction
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score, classification_report
+
+# Prepare features
+X = credit_data[['credit_score', 'debt_to_income', 'loan_amount', 'employment_length']]
+y = credit_data['default']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Fit logistic regression
+lr_model = LogisticRegression(random_state=42)
+lr_model.fit(X_train, y_train)
+
+# Predictions
+y_pred_proba = lr_model.predict_proba(X_test)[:, 1]
+y_pred = lr_model.predict(X_test)
+
+print(f"\nModel Performance:")
+print(f"AUC-ROC: {roc_auc_score(y_test, y_pred_proba):.3f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Risk segmentation
+risk_buckets = pd.cut(y_pred_proba, bins=[0, 0.1, 0.2, 0.5, 1.0], 
+                      labels=['Low', 'Medium', 'High', 'Very High'])
+risk_analysis = pd.DataFrame({
+    'Risk_Bucket': risk_buckets,
+    'Actual_Default': y_test
+}).groupby('Risk_Bucket').agg({
+    'Actual_Default': ['count', 'sum', 'mean']
+}).round(3)
+
+print("\nRisk Segmentation:")
+print(risk_analysis)
+```
+
+## Healthcare and Medical Diagnosis
+
+Probability theory is crucial for medical decision-making, diagnostic accuracy, and treatment effectiveness.
+
+### Diagnostic Test Accuracy
+
+Analyze the performance of medical diagnostic tests using Bayes' theorem.
+
+```python
+def diagnostic_test_analysis(sensitivity, specificity, prevalence, n_population=100000):
+    """
+    Analyze diagnostic test performance using Bayes' theorem
+    
+    Parameters:
+    - sensitivity: P(positive test | disease present)
+    - specificity: P(negative test | disease absent)
+    - prevalence: P(disease present in population)
+    """
+    
+    # Population breakdown
+    diseased = int(n_population * prevalence)
+    healthy = n_population - diseased
+    
+    # Test results
+    true_positives = int(diseased * sensitivity)
+    false_negatives = diseased - true_positives
+    true_negatives = int(healthy * specificity)
+    false_positives = healthy - true_negatives
+    
+    # Calculate key metrics
+    positive_tests = true_positives + false_positives
+    negative_tests = true_negatives + false_negatives
+    
+    # Predictive values (using Bayes' theorem)
+    ppv = true_positives / positive_tests if positive_tests > 0 else 0  # P(disease | positive)
+    npv = true_negatives / negative_tests if negative_tests > 0 else 0  # P(no disease | negative)
+    
+    # Likelihood ratios
+    lr_positive = sensitivity / (1 - specificity) if specificity < 1 else float('inf')
+    lr_negative = (1 - sensitivity) / specificity if sensitivity < 1 else 0
+    
+    results = {
+        'population': n_population,
+        'diseased': diseased,
+        'healthy': healthy,
+        'true_positives': true_positives,
+        'false_positives': false_positives,
+        'true_negatives': true_negatives,
+        'false_negatives': false_negatives,
+        'sensitivity': sensitivity,
+        'specificity': specificity,
+        'ppv': ppv,
+        'npv': npv,
+        'lr_positive': lr_positive,
+        'lr_negative': lr_negative,
+        'prevalence': prevalence
+    }
+    
+    return results
+
+# Example: COVID-19 rapid test
+covid_test = diagnostic_test_analysis(
+    sensitivity=0.85,    # 85% of infected people test positive
+    specificity=0.95,    # 95% of uninfected people test negative
+    prevalence=0.05      # 5% of population is infected
+)
+
+print("COVID-19 Rapid Test Analysis:")
+print(f"Population: {covid_test['population']:,}")
+print(f"Disease prevalence: {covid_test['prevalence']:.1%}")
+print(f"Sensitivity: {covid_test['sensitivity']:.1%}")
+print(f"Specificity: {covid_test['specificity']:.1%}")
+print(f"\nTest Results:")
+print(f"True positives: {covid_test['true_positives']:,}")
+print(f"False positives: {covid_test['false_positives']:,}")
+print(f"True negatives: {covid_test['true_negatives']:,}")
+print(f"False negatives: {covid_test['false_negatives']:,}")
+print(f"\nPredictive Values:")
+print(f"Positive predictive value: {covid_test['ppv']:.1%}")
+print(f"Negative predictive value: {covid_test['npv']:.1%}")
+
+# Visualize the impact of prevalence on PPV
+prevalences = np.linspace(0.001, 0.2, 100)
+ppvs = []
+npvs = []
+
+for prev in prevalences:
+    result = diagnostic_test_analysis(0.85, 0.95, prev, 100000)
+    ppvs.append(result['ppv'])
+    npvs.append(result['npv'])
+
+plt.figure(figsize=(15, 5))
+
+plt.subplot(1, 3, 1)
+plt.plot(prevalences * 100, np.array(ppvs) * 100, 'b-', linewidth=2)
+plt.xlabel('Disease Prevalence (%)')
+plt.ylabel('Positive Predictive Value (%)')
+plt.title('PPV vs Prevalence')
+plt.grid(True, alpha=0.3)
+
+plt.subplot(1, 3, 2)
+plt.plot(prevalences * 100, np.array(npvs) * 100, 'r-', linewidth=2)
+plt.xlabel('Disease Prevalence (%)')
+plt.ylabel('Negative Predictive Value (%)')
+plt.title('NPV vs Prevalence')
+plt.grid(True, alpha=0.3)
+
+# Confusion matrix visualization
+plt.subplot(1, 3, 3)
+confusion_matrix = np.array([
+    [covid_test['true_positives'], covid_test['false_negatives']],
+    [covid_test['false_positives'], covid_test['true_negatives']]
+])
+plt.imshow(confusion_matrix, cmap='Blues')
+plt.title('Confusion Matrix')
+labels = ['Positive', 'Negative']
+plt.xticks([0, 1], labels)
+plt.yticks([0, 1], ['Disease', 'No Disease'])
+plt.ylabel('True Condition')
+plt.xlabel('Test Result')
+
+for i in range(2):
+    for j in range(2):
+        plt.text(j, i, f'{confusion_matrix[i, j]:,}', 
+                ha='center', va='center', fontsize=12)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Clinical Trial Analysis
+
+Analyze clinical trial data using survival analysis and hypothesis testing.
+
+```python
+# Simulate clinical trial data
+np.random.seed(42)
+n_patients = 500
+
+# Patient characteristics
+ages = np.random.normal(65, 12, n_patients)
+treatment = np.random.binomial(1, 0.5, n_patients)  # 0: control, 1: treatment
+
+# Simulate survival times (Weibull distribution)
+# Treatment reduces hazard by 30%
+hazard_ratio = 0.7
+scale_control = 24  # months
+shape = 1.5
+
+survival_times = np.zeros(n_patients)
+for i in range(n_patients):
+    if treatment[i] == 0:  # Control group
+        survival_times[i] = np.random.weibull(shape) * scale_control
+    else:  # Treatment group
+        survival_times[i] = np.random.weibull(shape) * scale_control / hazard_ratio
+
+# Simulate censoring (study ends at 36 months)
+study_duration = 36
+censored = survival_times > study_duration
+observed_times = np.minimum(survival_times, study_duration)
+
+clinical_data = pd.DataFrame({
+    'patient_id': range(n_patients),
+    'age': ages,
+    'treatment': treatment,
+    'survival_time': observed_times,
+    'event': ~censored  # True if event observed, False if censored
+})
+
+print("Clinical Trial Analysis:")
+print(f"Total patients: {n_patients}")
+print(f"Control group: {np.sum(treatment == 0)}")
+print(f"Treatment group: {np.sum(treatment == 1)}")
+print(f"Events observed: {np.sum(clinical_data['event'])}")
+print(f"Censored: {np.sum(~clinical_data['event'])}")
+
+# Kaplan-Meier survival curves
+def kaplan_meier_estimator(times, events):
+    """Simple Kaplan-Meier estimator"""
+    # Sort by time
+    sorted_indices = np.argsort(times)
+    sorted_times = times[sorted_indices]
+    sorted_events = events[sorted_indices]
+    
+    unique_times = np.unique(sorted_times[sorted_events])
+    survival_probs = []
+    
+    n_at_risk = len(times)
+    survival_prob = 1.0
+    
+    for t in unique_times:
+        # Number of events at time t
+        n_events = np.sum((sorted_times == t) & sorted_events)
+        # Number at risk just before time t
+        n_at_risk = np.sum(sorted_times >= t)
+        
+        # Update survival probability
+        survival_prob *= (n_at_risk - n_events) / n_at_risk
+        survival_probs.append(survival_prob)
+    
+    return unique_times, np.array(survival_probs)
+
+# Calculate survival curves for each group
+control_mask = clinical_data['treatment'] == 0
+treatment_mask = clinical_data['treatment'] == 1
+
+times_control, surv_control = kaplan_meier_estimator(
+    clinical_data.loc[control_mask, 'survival_time'].values,
+    clinical_data.loc[control_mask, 'event'].values
+)
+
+times_treatment, surv_treatment = kaplan_meier_estimator(
+    clinical_data.loc[treatment_mask, 'survival_time'].values,
+    clinical_data.loc[treatment_mask, 'event'].values
+)
+
+# Log-rank test (simplified)
+def logrank_test(times1, events1, times2, events2):
+    """Simplified log-rank test"""
+    # Combine and sort all times
+    all_times = np.concatenate([times1, times2])
+    all_events = np.concatenate([events1, events2])
+    group = np.concatenate([np.zeros(len(times1)), np.ones(len(times2))])
+    
+    # Sort by time
+    sorted_indices = np.argsort(all_times)
+    sorted_times = all_times[sorted_indices]
+    sorted_events = all_events[sorted_indices]
+    sorted_group = group[sorted_indices]
+    
+    unique_times = np.unique(sorted_times[sorted_events])
+    
+    observed1, expected1 = 0, 0
+    
+    for t in unique_times:
+        at_risk_mask = sorted_times >= t
+        event_mask = (sorted_times == t) & sorted_events
+        
+        n1_at_risk = np.sum(at_risk_mask & (sorted_group == 0))
+        n2_at_risk = np.sum(at_risk_mask & (sorted_group == 1))
+        total_at_risk = n1_at_risk + n2_at_risk
+        
+        d1 = np.sum(event_mask & (sorted_group == 0))
+        d_total = np.sum(event_mask)
+        
+        if total_at_risk > 0:
+            expected_d1 = d_total * n1_at_risk / total_at_risk
+            observed1 += d1
+            expected1 += expected_d1
+    
+    # Chi-square statistic
+    chi_square = (observed1 - expected1)**2 / expected1 if expected1 > 0 else 0
+    p_value = 1 - stats.chi2.cdf(chi_square, df=1)
+    
+    return chi_square, p_value
+
+chi2_stat, p_value = logrank_test(
+    clinical_data.loc[control_mask, 'survival_time'].values,
+    clinical_data.loc[control_mask, 'event'].values,
+    clinical_data.loc[treatment_mask, 'survival_time'].values,
+    clinical_data.loc[treatment_mask, 'event'].values
+)
+
+print(f"\nLog-rank Test:")
+print(f"Chi-square statistic: {chi2_stat:.3f}")
+print(f"p-value: {p_value:.3f}")
+
+# Visualization
+plt.figure(figsize=(15, 5))
+
+# Survival curves
+plt.subplot(1, 3, 1)
+plt.step(times_control, surv_control, where='post', label='Control', linewidth=2)
+plt.step(times_treatment, surv_treatment, where='post', label='Treatment', linewidth=2)
+plt.xlabel('Time (months)')
+plt.ylabel('Survival Probability')
+plt.title('Kaplan-Meier Survival Curves')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Hazard ratio over time (simplified)
+plt.subplot(1, 3, 2)
+median_control = times_control[np.argmin(np.abs(surv_control - 0.5))] if len(times_control) > 0 else np.nan
+median_treatment = times_treatment[np.argmin(np.abs(surv_treatment - 0.5))] if len(times_treatment) > 0 else np.nan
+
+if not np.isnan(median_control) and not np.isnan(median_treatment):
+    plt.bar(['Control', 'Treatment'], [median_control, median_treatment], alpha=0.7)
+    plt.ylabel('Median Survival Time (months)')
+    plt.title('Median Survival Comparison')
+    plt.grid(True, alpha=0.3)
+
+# Event distribution
+plt.subplot(1, 3, 3)
+event_summary = clinical_data.groupby('treatment')['event'].agg(['sum', 'count'])
+event_summary['rate'] = event_summary['sum'] / event_summary['count']
+
+plt.bar(['Control', 'Treatment'], event_summary['rate'], alpha=0.7)
+plt.ylabel('Event Rate')
+plt.title('Event Rate by Treatment')
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Engineering and Reliability Analysis
+
+Engineering systems require reliability analysis to predict failures and optimize maintenance schedules.
+
+### System Reliability Modeling
+
+```python
+# Reliability analysis for a system with multiple components
+def exponential_reliability(t, failure_rate):
+    """Reliability function for exponential distribution"""
+    return np.exp(-failure_rate * t)
+
+def weibull_reliability(t, scale, shape):
+    """Reliability function for Weibull distribution"""
+    return np.exp(-(t / scale) ** shape)
+
+# System configuration
+components = {
+    'pump': {'type': 'exponential', 'rate': 0.001},  # failures per hour
+    'valve': {'type': 'weibull', 'scale': 8760, 'shape': 2},  # scale in hours
+    'sensor': {'type': 'exponential', 'rate': 0.0005},
+    'controller': {'type': 'weibull', 'scale': 10000, 'shape': 1.5}
+}
+
+# Time points (hours)
+t = np.linspace(0, 10000, 1000)
+
+# Calculate individual component reliabilities
+reliabilities = {}
+for name, params in components.items():
+    if params['type'] == 'exponential':
+        reliabilities[name] = exponential_reliability(t, params['rate'])
+    elif params['type'] == 'weibull':
+        reliabilities[name] = weibull_reliability(t, params['scale'], params['shape'])
+
+# System reliability (series configuration - all components must work)
+system_reliability_series = np.prod(list(reliabilities.values()), axis=0)
+
+# Parallel redundancy for critical components (pump has backup)
+pump_parallel = 1 - (1 - reliabilities['pump'])**2  # Two pumps in parallel
+system_reliability_redundant = (pump_parallel * 
+                               reliabilities['valve'] * 
+                               reliabilities['sensor'] * 
+                               reliabilities['controller'])
+
+print("Reliability Analysis:")
+print("Component reliabilities at t=1000 hours:")
+for name, rel in reliabilities.items():
+    idx_1000 = np.argmin(np.abs(t - 1000))
+    print(f"{name}: {rel[idx_1000]:.4f}")
+
+idx_1000 = np.argmin(np.abs(t - 1000))
+print(f"\nSystem reliability at t=1000 hours:")
+print(f"Series configuration: {system_reliability_series[idx_1000]:.4f}")
+print(f"With pump redundancy: {system_reliability_redundant[idx_1000]:.4f}")
+
+# Monte Carlo simulation for system reliability
+def simulate_system_lifetime(n_simulations=10000):
+    """Simulate system lifetime using Monte Carlo"""
+    lifetimes = []
+    
+    for _ in range(n_simulations):
+        # Generate component lifetimes
+        pump_life = np.random.exponential(1/components['pump']['rate'])
+        valve_life = np.random.weibull(components['valve']['shape']) * components['valve']['scale']
+        sensor_life = np.random.exponential(1/components['sensor']['rate'])
+        controller_life = np.random.weibull(components['controller']['shape']) * components['controller']['scale']
+        
+        # System lifetime (minimum of all components for series system)
+        system_life = min(pump_life, valve_life, sensor_life, controller_life)
+        lifetimes.append(system_life)
+    
+    return np.array(lifetimes)
+
+# Run simulation
+simulated_lifetimes = simulate_system_lifetime()
+mean_lifetime = np.mean(simulated_lifetimes)
+median_lifetime = np.median(simulated_lifetimes)
+
+print(f"\nMonte Carlo Simulation Results:")
+print(f"Mean system lifetime: {mean_lifetime:.0f} hours")
+print(f"Median system lifetime: {median_lifetime:.0f} hours")
+print(f"90% of systems fail before: {np.percentile(simulated_lifetimes, 90):.0f} hours")
+
+# Visualization
+plt.figure(figsize=(15, 10))
+
+# Component reliabilities
+plt.subplot(2, 2, 1)
+for name, rel in reliabilities.items():
+    plt.plot(t, rel, label=name, linewidth=2)
+plt.xlabel('Time (hours)')
+plt.ylabel('Reliability')
+plt.title('Component Reliability Functions')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# System reliability comparison
+plt.subplot(2, 2, 2)
+plt.plot(t, system_reliability_series, label='Series System', linewidth=2)
+plt.plot(t, system_reliability_redundant, label='With Pump Redundancy', linewidth=2)
+plt.xlabel('Time (hours)')
+plt.ylabel('System Reliability')
+plt.title('System Reliability Comparison')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Simulated lifetime distribution
+plt.subplot(2, 2, 3)
+plt.hist(simulated_lifetimes, bins=50, alpha=0.7, density=True)
+plt.axvline(mean_lifetime, color='red', linestyle='--', label=f'Mean: {mean_lifetime:.0f}h')
+plt.axvline(median_lifetime, color='green', linestyle='--', label=f'Median: {median_lifetime:.0f}h')
+plt.xlabel('System Lifetime (hours)')
+plt.ylabel('Density')
+plt.title('Simulated System Lifetime Distribution')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Failure rate over time
+plt.subplot(2, 2, 4)
+# Calculate empirical failure rate
+dt = t[1] - t[0]
+failure_rate_series = -np.gradient(np.log(system_reliability_series)) / dt
+failure_rate_redundant = -np.gradient(np.log(system_reliability_redundant)) / dt
+
+plt.plot(t[1:], failure_rate_series[1:], label='Series System', linewidth=2)
+plt.plot(t[1:], failure_rate_redundant[1:], label='With Redundancy', linewidth=2)
+plt.xlabel('Time (hours)')
+plt.ylabel('Failure Rate (failures/hour)')
+plt.title('System Failure Rate')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Data Science and Machine Learning
+
+Probability theory underlies many machine learning algorithms and uncertainty quantification methods.
+
+### Probabilistic Classification
+
+```python
+# Gaussian Naive Bayes implementation
+class GaussianNaiveBayes:
+    def __init__(self):
+        self.classes = None
+        self.class_priors = {}
+        self.feature_params = {}
+    
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        n_samples = len(y)
+        
+        for cls in self.classes:
+            # Class prior
+            self.class_priors[cls] = np.sum(y == cls) / n_samples
+            
+            # Feature parameters (mean and std for each feature)
+            class_data = X[y == cls]
+            self.feature_params[cls] = {
+                'mean': np.mean(class_data, axis=0),
+                'std': np.std(class_data, axis=0) + 1e-9  # Add small value to avoid division by zero
+            }
+    
+    def predict_proba(self, X):
+        n_samples, n_features = X.shape
+        probabilities = np.zeros((n_samples, len(self.classes)))
+        
+        for i, cls in enumerate(self.classes):
+            # Log prior
+            log_prior = np.log(self.class_priors[cls])
+            
+            # Log likelihood (assuming independence)
+            mean = self.feature_params[cls]['mean']
+            std = self.feature_params[cls]['std']
+            
+            log_likelihood = np.sum(
+                -0.5 * np.log(2 * np.pi * std**2) - 
+                0.5 * ((X - mean) / std)**2, 
+                axis=1
+            )
+            
+            probabilities[:, i] = log_prior + log_likelihood
+        
+        # Convert from log probabilities to probabilities
+        # Subtract max for numerical stability
+        probabilities = probabilities - np.max(probabilities, axis=1, keepdims=True)
+        probabilities = np.exp(probabilities)
+        
+        # Normalize
+        probabilities = probabilities / np.sum(probabilities, axis=1, keepdims=True)
+        
+        return probabilities
+    
+    def predict(self, X):
+        probabilities = self.predict_proba(X)
+        return self.classes[np.argmax(probabilities, axis=1)]
+
+# Generate synthetic classification data
+np.random.seed(42)
+n_samples = 1000
+n_features = 2
+
+# Class 0: centered at (2, 2)
+class0_data = np.random.multivariate_normal([2, 2], [[1, 0.5], [0.5, 1]], n_samples//2)
+# Class 1: centered at (-1, -1)
+class1_data = np.random.multivariate_normal([-1, -1], [[1, -0.3], [-0.3, 1]], n_samples//2)
+
+X = np.vstack([class0_data, class1_data])
+y = np.hstack([np.zeros(n_samples//2), np.ones(n_samples//2)])
+
+# Split data
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Train Naive Bayes
+nb_model = GaussianNaiveBayes()
+nb_model.fit(X_train, y_train)
+
+# Predictions
+y_pred_proba = nb_model.predict_proba(X_test)
+y_pred = nb_model.predict(X_test)
+
+# Evaluate
+from sklearn.metrics import accuracy_score, classification_report
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Naive Bayes Accuracy: {accuracy:.3f}")
+
+# Visualization
+plt.figure(figsize=(15, 5))
+
+# Data distribution
+plt.subplot(1, 3, 1)
+colors = ['red', 'blue']
+for i, cls in enumerate([0, 1]):
+    mask = y_train == cls
+    plt.scatter(X_train[mask, 0], X_train[mask, 1], 
+               c=colors[i], alpha=0.6, label=f'Class {int(cls)}')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.title('Training Data')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Decision boundary
+plt.subplot(1, 3, 2)
+h = 0.1
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                     np.arange(y_min, y_max, h))
+
+mesh_points = np.c_[xx.ravel(), yy.ravel()]
+Z = nb_model.predict_proba(mesh_points)[:, 1]
+Z = Z.reshape(xx.shape)
+
+plt.contourf(xx, yy, Z, levels=50, alpha=0.8, cmap='RdYlBu')
+plt.colorbar(label='P(Class 1)')
+
+# Plot test points
+for i, cls in enumerate([0, 1]):
+    mask = y_test == cls
+    plt.scatter(X_test[mask, 0], X_test[mask, 1], 
+               c=colors[i], alpha=0.8, edgecolors='black', label=f'Class {int(cls)}')
+
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.title('Decision Boundary')
+plt.legend()
+
+# Prediction confidence
+plt.subplot(1, 3, 3)
+confidence = np.max(y_pred_proba, axis=1)
+correct = (y_pred == y_test)
+
+plt.hist(confidence[correct], bins=20, alpha=0.7, label='Correct', density=True)
+plt.hist(confidence[~correct], bins=20, alpha=0.7, label='Incorrect', density=True)
+plt.xlabel('Prediction Confidence')
+plt.ylabel('Density')
+plt.title('Confidence Distribution')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+print(f"\nClassification Report:")
+print(classification_report(y_test, y_pred))
+```
+
+## Key Takeaways
+
+Probability theory provides the mathematical foundation for addressing uncertainty across diverse fields:
+
+**Finance**: Risk quantification, portfolio optimization, and derivative pricing rely heavily on probabilistic models and Monte Carlo simulation.
+
+**Healthcare**: Medical decision-making benefits from Bayesian reasoning, diagnostic test interpretation, and clinical trial analysis.
+
+**Engineering**: Reliability analysis and failure prediction use probability distributions and survival analysis to optimize system design and maintenance.
+
+**Data Science**: Machine learning algorithms often have probabilistic interpretations, enabling uncertainty quantification and robust decision-making.
+
+<Callout variant="tip">
+**Cross-Domain Insights**
+
+- **Uncertainty quantification** is crucial across all applications
+- **Bayesian thinking** provides intuitive frameworks for updating beliefs
+- **Monte Carlo methods** enable analysis of complex systems
+- **Model validation** requires understanding assumptions and limitations
+- **Communication** of probabilistic results requires careful interpretation
+</Callout>
+
+<Pager 
+  prev={{ title: "Bayesian Probability", href: "/bayesian" }}
+  next={{ title: "Advanced Topics", href: "/advanced-topics" }}
+/>
