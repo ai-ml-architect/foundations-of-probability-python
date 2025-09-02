@@ -1,0 +1,200 @@
+---
+export interface Props {
+  code?: string;
+  lang?: string;
+  filename?: string;
+  copyButton?: boolean;
+  highlightLines?: number[];
+  class?: string;
+}
+
+const { 
+  code: propCode, 
+  lang = 'text', 
+  filename, 
+  copyButton = true, 
+  highlightLines = [], 
+  class: className = "" 
+} = Astro.props;
+
+// Get code from props or from slot content
+const slotContent = await Astro.slots.render('default');
+const code = propCode || slotContent || '';
+
+// Generate a unique ID for the code block
+const codeId = `code-${Math.random().toString(36).substring(2, 11)}`;
+---
+
+<div class={`code-block group relative rounded-lg border bg-muted/50 my-6 ${className}`}>
+  {filename && (
+    <div class="flex items-center justify-between px-4 py-2 border-b bg-muted/30 rounded-t-lg">
+      <div class="flex items-center space-x-2">
+        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+        <span class="ml-2 text-sm font-mono text-muted-foreground">{filename}</span>
+      </div>
+      {copyButton && (
+        <button 
+          class="copy-button opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-background/80 hover:bg-background border rounded"
+          data-code-id={codeId}
+          aria-label="Copy code to clipboard"
+        >
+          <span class="copy-text">Copy</span>
+          <span class="copied-text hidden">Copied!</span>
+        </button>
+      )}
+    </div>
+  )}
+  
+  <div class="relative">
+    {!filename && copyButton && (
+      <button 
+        class="copy-button absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-background/80 hover:bg-background border rounded z-10"
+        data-code-id={codeId}
+        aria-label="Copy code to clipboard"
+      >
+        <span class="copy-text">Copy</span>
+        <span class="copied-text hidden">Copied!</span>
+      </button>
+    )}
+    
+    <pre 
+      class="overflow-x-auto p-4 text-sm leading-relaxed"
+      id={codeId}
+    ><code class={`language-${lang}`}>{typeof code === 'string' ? code.trim() : code}</code></pre>
+  </div>
+</div>
+
+<script>
+  // Copy to clipboard functionality
+  function initializeCopyButtons() {
+    document.querySelectorAll('.copy-button').forEach(button => {
+      button.addEventListener('click', async () => {
+        const codeId = button.getAttribute('data-code-id');
+        const codeElement = document.getElementById(codeId);
+        const copyText = button.querySelector('.copy-text');
+        const copiedText = button.querySelector('.copied-text');
+        
+        if (codeElement && copyText && copiedText) {
+          try {
+            const code = codeElement.textContent || '';
+            await navigator.clipboard.writeText(code);
+            
+            // Show feedback
+            copyText.classList.add('hidden');
+            copiedText.classList.remove('hidden');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+              copyText.classList.remove('hidden');
+              copiedText.classList.add('hidden');
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy code:', err);
+            
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = codeElement.textContent || '';
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Show feedback
+            copyText.classList.add('hidden');
+            copiedText.classList.remove('hidden');
+            
+            setTimeout(() => {
+              copyText.classList.remove('hidden');
+              copiedText.classList.add('hidden');
+            }, 2000);
+          }
+        }
+      });
+    });
+  }
+  
+  // Initialize on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCopyButtons);
+  } else {
+    initializeCopyButtons();
+  }
+  
+  // Re-initialize on navigation (for SPA-like behavior)
+  document.addEventListener('astro:page-load', initializeCopyButtons);
+</script>
+
+<style>
+  .code-block pre {
+    /* Ensure proper scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .code-block code {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-variant-ligatures: common-ligatures;
+  }
+  
+  /* Language-specific styling */
+  .language-python {
+    /* Python-specific styles can go here */
+  }
+  
+  .language-javascript {
+    /* JavaScript-specific styles can go here */
+  }
+  
+  .language-bash {
+    /* Bash-specific styles can go here */
+  }
+  
+  /* Line highlighting */
+  .code-block pre code[data-highlight-lines] {
+    /* This will be enhanced by rehype-pretty-code */
+  }
+  
+  /* Dark mode adjustments */
+  .dark .code-block {
+    background-color: rgb(15 23 42); /* slate-900 */
+    border-color: rgb(51 65 85); /* slate-700 */
+  }
+  
+  .dark .code-block pre {
+    background-color: transparent;
+  }
+  
+  .dark .code-block code {
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  /* Copy button improvements */
+  .copy-button {
+    backdrop-filter: blur(8px);
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .copy-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .copy-button:active {
+    transform: translateY(0);
+  }
+  
+  /* Responsive design */
+  @media (max-width: 640px) {
+    .code-block pre {
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .copy-button {
+      opacity: 1; /* Always show on mobile */
+    }
+  }
+</style>
