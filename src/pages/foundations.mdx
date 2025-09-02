@@ -1,0 +1,506 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: 'Mathematical Foundations - Foundations of Probability in Python'
+description: 'Explore Kolmogorov axiomatic framework, probability spaces, conditional probability, and Bayes theorem with rigorous mathematical treatment.'
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Equation from '../components/ui/Equation.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import Figure from '../components/ui/Figure.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+import Pager from '../components/ui/Pager.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'axiomatic-foundation', text: 'The Axiomatic Foundation' },
+  { depth: 2, slug: 'probability-space', text: 'The Probability Space (Ω, F, P)' },
+  { depth: 2, slug: 'kolmogorov-axioms', text: 'Kolmogorov Three Axioms' },
+  { depth: 2, slug: 'fundamental-concepts', text: 'Fundamental Concepts and Definitions' },
+  { depth: 2, slug: 'conditional-probability', text: 'Conditional Probability and Independence' },
+  { depth: 2, slug: 'bayes-theorem', text: 'Bayes Theorem' },
+  { depth: 2, slug: 'counting-principles', text: 'Counting Principles and Combinatorics' },
+  { depth: 2, slug: 'probability-distributions', text: 'Probability Distributions' }
+]} />
+
+# Mathematical Foundations of Probability Theory
+
+The mathematical foundations of probability theory provide the rigorous framework upon which all probabilistic reasoning rests. Understanding these foundations is crucial for both theoretical comprehension and practical application, as they establish the rules and principles that govern how we can legitimately manipulate probabilities and draw conclusions from uncertain information.
+
+## The Axiomatic Foundation: Kolmogorov's Framework
+
+Modern probability theory rests on the axiomatic foundation established by Andrey Kolmogorov in 1933, which provides a measure-theoretic approach to probability. This framework consists of three fundamental axioms that any valid probability measure must satisfy, along with the concept of a probability space that provides the mathematical structure for probabilistic reasoning.
+
+<Callout variant="note">
+**For Beginners**: Think of these axioms as the basic rules that any reasonable way of assigning probabilities must follow. Just as arithmetic has rules (like the fact that 2 + 2 must equal 4), probability has rules that ensure our calculations make sense and lead to consistent results.
+</Callout>
+
+<Callout variant="theorem">
+**For Advanced Practitioners**: The axiomatic approach provides the mathematical rigor necessary for sophisticated probabilistic reasoning and ensures that probability theory is internally consistent and compatible with measure theory, enabling the development of advanced concepts like stochastic processes and martingales.
+</Callout>
+
+## The Probability Space (Ω, F, P)
+
+A probability space consists of three components that together provide the complete mathematical framework for probabilistic analysis:
+
+### Sample Space (Ω)
+
+The sample space represents the set of all possible outcomes of a random experiment:
+- For a coin flip: **Ω = \{Heads, Tails\}**
+- For rolling a six-sided die: **Ω = \{1, 2, 3, 4, 5, 6\}**  
+- For measuring height: **Ω = [0, 3]** meters (all physically possible heights)
+
+<CodeBlock 
+  filename="sample_spaces.py" 
+  lang="python"
+  code={`# Define sample spaces in Python
+import numpy as np
+
+# Discrete sample spaces
+coin_space = ['Heads', 'Tails']
+die_space = list(range(1, 7))
+card_suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+card_ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+
+# Cartesian product for card deck
+card_deck = [(rank, suit) for suit in card_suits for rank in card_ranks]
+print(f"Total cards in deck: {len(card_deck)}")
+
+# Continuous sample space (conceptual)
+height_range = (0, 3)  # meters
+print(f"Height sample space: {height_range}")`}
+/>
+
+The choice of sample space is crucial and depends on the level of detail required for the analysis. When modeling stock prices, we might use Ω = [0, ∞) to represent all possible positive prices, or we might use a discrete set if we're only interested in certain price levels.
+
+### Event Space (F)
+
+The event space, also called a σ-algebra, is a collection of subsets of Ω that represents all the events to which we can assign probabilities. An event is simply a subset of the sample space.
+
+**Example**: When rolling a die, the event "rolling an even number" corresponds to the subset \{2, 4, 6\}.
+
+The σ-algebra must satisfy certain closure properties:
+- Must contain the empty set ∅ and the sample space Ω
+- Must be closed under complements and countable unions
+- These properties ensure we can perform logical operations on events
+
+<CodeBlock 
+  filename="events.py" 
+  lang="python"
+  code={`# Define events using set operations
+sample_space = set(range(1, 7))  # Die outcomes
+event_even = {2, 4, 6}
+event_greater_than_3 = {4, 5, 6}
+event_prime = {2, 3, 5}
+
+# Event operations
+union_event = event_even | event_greater_than_3  # Union (OR)
+intersection_event = event_even & event_greater_than_3  # Intersection (AND)
+complement_even = sample_space - event_even  # Complement (NOT)
+
+print(f"Even numbers: {event_even}")
+print(f"Greater than 3: {event_greater_than_3}")
+print(f"Even OR greater than 3: {union_event}")
+print(f"Even AND greater than 3: {intersection_event}")
+print(f"NOT even (odd numbers): {complement_even}")`}
+/>
+
+### Probability Measure (P)
+
+The probability measure is a function that assigns a real number between 0 and 1 to each event in F, representing the likelihood of that event occurring. This function must satisfy Kolmogorov's three axioms.
+
+## Kolmogorov's Three Axioms
+
+<Callout variant="theorem">
+**Kolmogorov's Axioms**: The foundation of modern probability theory rests on three fundamental axioms that any valid probability measure must satisfy.
+</Callout>
+
+### Axiom 1 (Non-negativity)
+For any event A ∈ F, **P(A) ≥ 0**.
+
+This axiom establishes that probabilities cannot be negative, which aligns with our intuitive understanding that likelihood cannot be less than "impossible."
+
+### Axiom 2 (Normalization)  
+**P(Ω) = 1**.
+
+This axiom states that the probability of the entire sample space is 1, meaning that something must happen when we perform our random experiment. This provides the normalization that makes probability a relative measure.
+
+### Axiom 3 (Countable Additivity)
+For any countable collection of mutually exclusive events A₁, A₂, A₃, ..., we have:
+
+<Equation math="P(A₁ ∪ A₂ ∪ A₃ ∪ ...) = P(A₁) + P(A₂) + P(A₃) + ..." display={true} />
+
+This axiom ensures that the probability of any one of several mutually exclusive events occurring is the sum of their individual probabilities.
+
+<CodeBlock 
+  filename="axiom_verification.py" 
+  lang="python"
+  code={`import numpy as np
+
+def verify_axioms():
+    """Verify Kolmogorov's axioms with a simple example"""
+    # Define a fair six-sided die
+    outcomes = list(range(1, 7))
+    probabilities = [1/6] * 6
+    
+    # Axiom 1: Non-negativity
+    axiom1_satisfied = all(p >= 0 for p in probabilities)
+    print(f"Axiom 1 (Non-negativity): {axiom1_satisfied}")
+    
+    # Axiom 2: Normalization
+    total_prob = sum(probabilities)
+    axiom2_satisfied = abs(total_prob - 1.0) < 1e-10
+    print(f"Axiom 2 (Normalization): {axiom2_satisfied}, Total: {total_prob}")
+    
+    # Axiom 3: Additivity (mutually exclusive events)
+    # P(even) = P(2) + P(4) + P(6)
+    prob_even_direct = probabilities[1] + probabilities[3] + probabilities[5]  # 0-indexed
+    prob_even_calculated = 3 * (1/6)
+    axiom3_satisfied = abs(prob_even_direct - prob_even_calculated) < 1e-10
+    print(f"Axiom 3 (Additivity): {axiom3_satisfied}")
+    print(f"P(even) = {prob_even_direct:.4f}")
+
+verify_axioms()`}
+/>
+
+### Immediate Consequences
+
+These axioms have immediate practical consequences:
+- **P(Aᶜ) = 1 - P(A)** for any event A (complement rule)
+- **P(∅) = 0** (probability of impossible event)
+- **P(A ∪ B) = P(A) + P(B) - P(A ∩ B)** (inclusion-exclusion principle)
+
+## Fundamental Concepts and Definitions
+
+### Events and Event Operations
+
+Events are the building blocks of probabilistic reasoning. Given events A and B in a probability space, we can define several important operations:
+
+| Operation | Notation | Meaning | Example |
+|-----------|----------|---------|---------|
+| Union | A ∪ B | Either A or B (or both) occurs | Rolling 1,2 OR 4,5 |
+| Intersection | A ∩ B | Both A and B occur | Rolling even AND > 3 |
+| Complement | Aᶜ | A does not occur | NOT rolling even |
+| Difference | A \ B | A occurs but B does not | A ∩ Bᶜ |
+
+These operations follow the familiar laws of set theory, including **De Morgan's laws**:
+- **(A ∪ B)ᶜ = Aᶜ ∩ Bᶜ**
+- **(A ∩ B)ᶜ = Aᶜ ∪ Bᶜ**
+
+<CodeBlock 
+  filename="demorgan_laws.py" 
+  lang="python"
+  code={`def verify_demorgan_laws():
+    """Verify De Morgan's laws with set operations"""
+    # Define sample space and events
+    omega = set(range(1, 7))  # Die outcomes
+    A = {1, 2, 3}  # Rolling 1, 2, or 3
+    B = {2, 4, 6}  # Rolling even
+    
+    # De Morgan's Law 1: (A ∪ B)ᶜ = Aᶜ ∩ Bᶜ
+    left_side = omega - (A | B)  # (A ∪ B)ᶜ
+    right_side = (omega - A) & (omega - B)  # Aᶜ ∩ Bᶜ
+    
+    print(f"A = {A}")
+    print(f"B = {B}")
+    print(f"(A ∪ B)ᶜ = {left_side}")
+    print(f"Aᶜ ∩ Bᶜ = {right_side}")
+    print(f"De Morgan's Law 1 verified: {left_side == right_side}")
+    
+    # De Morgan's Law 2: (A ∩ B)ᶜ = Aᶜ ∪ Bᶜ
+    left_side2 = omega - (A & B)  # (A ∩ B)ᶜ
+    right_side2 = (omega - A) | (omega - B)  # Aᶜ ∪ Bᶜ
+    
+    print(f"\\n(A ∩ B)ᶜ = {left_side2}")
+    print(f"Aᶜ ∪ Bᶜ = {right_side2}")
+    print(f"De Morgan's Law 2 verified: {left_side2 == right_side2}")
+
+verify_demorgan_laws()`}
+/>
+
+## Conditional Probability and Independence
+
+Conditional probability represents one of the most important and practically useful concepts in probability theory. The conditional probability of event A given event B, denoted P(A|B), represents the probability that A occurs given that we know B has occurred.
+
+### Mathematical Definition
+
+<Equation math="P(A|B) = \\frac{P(A \\cap B)}{P(B)}, \\text{ provided } P(B) > 0" display={true} />
+
+### Intuitive Understanding
+
+Conditional probability updates our beliefs about A based on new information (the occurrence of B). It's the foundation of learning from data and updating predictions as new information becomes available.
+
+<CodeBlock 
+  filename="conditional_probability.py" 
+  lang="python"
+  code={`def medical_diagnosis_example():
+    """Demonstrate conditional probability with medical diagnosis"""
+    # Test and disease parameters
+    disease_prevalence = 0.01  # 1% of population has disease
+    test_sensitivity = 0.95    # P(positive test | disease)
+    test_specificity = 0.90    # P(negative test | no disease)
+    
+    print("Medical Diagnosis Example")
+    print("=" * 40)
+    print(f"Disease prevalence: {disease_prevalence:.1%}")
+    print(f"Test sensitivity: {test_sensitivity:.1%}")
+    print(f"Test specificity: {test_specificity:.1%}")
+    
+    # Calculate using conditional probability
+    # P(positive test | no disease) = 1 - specificity
+    prob_positive_given_no_disease = 1 - test_specificity
+    
+    # P(positive test) using law of total probability
+    prob_positive = (test_sensitivity * disease_prevalence + 
+                    prob_positive_given_no_disease * (1 - disease_prevalence))
+    
+    # P(disease | positive test) using definition of conditional probability
+    prob_disease_given_positive = (test_sensitivity * disease_prevalence) / prob_positive
+    
+    print(f"\\nResults:")
+    print(f"P(positive test) = {prob_positive:.4f}")
+    print(f"P(disease | positive test) = {prob_disease_given_positive:.4f}")
+    print(f"This means only {prob_disease_given_positive*100:.1f}% of positive tests indicate disease!")
+    
+    return prob_disease_given_positive
+
+# Run the example
+ppv = medical_diagnosis_example()`}
+/>
+
+### Independence
+
+Two events A and B are **independent** if P(A|B) = P(A), meaning that knowing whether B occurred doesn't change our assessment of A's probability. 
+
+Equivalently, A and B are independent if and only if:
+
+<Equation math="P(A \\cap B) = P(A) \\times P(B)" display={true} />
+
+<Callout variant="warning">
+**Important**: Independence is often assumed in modeling but should be carefully justified, as violations of independence assumptions can lead to seriously incorrect conclusions. For example, assuming that different loans in a portfolio default independently might severely underestimate the risk of simultaneous defaults during economic downturns.
+</Callout>
+
+## Bayes' Theorem: The Foundation of Statistical Inference
+
+Bayes' theorem, derived from the definition of conditional probability, provides the mathematical foundation for updating beliefs in light of new evidence. It's arguably the most important single result in probability theory for practical applications.
+
+### Mathematical Statement
+
+<Equation math="P(A|B) = \\frac{P(B|A) \\times P(A)}{P(B)}" display={true} />
+
+### Component Interpretation
+
+- **P(A|B)**: **Posterior probability** - our updated belief about A after observing B
+- **P(B|A)**: **Likelihood** - the probability of observing B given that A is true  
+- **P(A)**: **Prior probability** - our initial belief about A before observing B
+- **P(B)**: **Marginal probability** - the total probability of observing B
+
+### Extended Form with Law of Total Probability
+
+When we have a partition of the sample space into events A₁, A₂, ..., Aₙ, Bayes' theorem can be written as:
+
+<Equation math="P(A_i|B) = \\frac{P(B|A_i) \\times P(A_i)}{\\sum_{j=1}^{n} P(B|A_j) \\times P(A_j)}" display={true} />
+
+<CodeBlock 
+  filename="bayes_theorem.py" 
+  lang="python"
+  code={`import numpy as np
+
+def bayes_theorem_example():
+    """Demonstrate Bayes' theorem with a practical example"""
+    # Email spam classification example
+    # Prior probabilities
+    prob_spam = 0.3  # 30% of emails are spam
+    prob_ham = 0.7   # 70% of emails are legitimate (ham)
+    
+    # Likelihoods (probability of word "free" appearing)
+    prob_free_given_spam = 0.8  # "free" appears in 80% of spam emails
+    prob_free_given_ham = 0.1   # "free" appears in 10% of ham emails
+    
+    # Calculate marginal probability P(free)
+    prob_free = (prob_free_given_spam * prob_spam + 
+                 prob_free_given_ham * prob_ham)
+    
+    # Apply Bayes' theorem: P(spam | free)
+    prob_spam_given_free = (prob_free_given_spam * prob_spam) / prob_free
+    
+    print("Email Spam Classification with Bayes' Theorem")
+    print("=" * 50)
+    print(f"Prior P(spam) = {prob_spam:.2f}")
+    print(f"Prior P(ham) = {prob_ham:.2f}")
+    print(f"Likelihood P('free' | spam) = {prob_free_given_spam:.2f}")
+    print(f"Likelihood P('free' | ham) = {prob_free_given_ham:.2f}")
+    print(f"\\nMarginal P('free') = {prob_free:.3f}")
+    print(f"Posterior P(spam | 'free') = {prob_spam_given_free:.3f}")
+    
+    return prob_spam_given_free
+
+# Run Bayes' theorem example
+posterior = bayes_theorem_example()`}
+/>
+
+### The Philosophical and Practical Significance
+
+Bayes' theorem represents more than just a mathematical formula; it embodies a fundamental approach to reasoning under uncertainty. The **Bayesian perspective** views probability as a degree of belief that can be updated as new information becomes available, contrasting with the **frequentist interpretation** that views probability as a long-run frequency of occurrence.
+
+<Callout variant="tip">
+**For Beginners**: Think of Bayes' theorem as a systematic way to update your opinions when you get new information. If you initially think there's a 30% chance it will rain today (your prior), and then you see dark clouds forming (new evidence), Bayes' theorem tells you exactly how to calculate your updated belief about the probability of rain.
+</Callout>
+
+## Counting Principles and Combinatorics
+
+Many probability problems, especially those involving discrete sample spaces, require careful counting of outcomes. Combinatorics provides the mathematical tools for systematic counting, which is essential for calculating probabilities in finite sample spaces.
+
+### Fundamental Counting Principles
+
+**Multiplication Principle**: If one task can be performed in m ways and a second task can be performed in n ways, then both tasks can be performed in sequence in **m × n** ways.
+
+**Addition Principle**: If one task can be performed in m ways and a different task can be performed in n ways, and the tasks cannot be performed simultaneously, then there are **m + n** ways to perform one of the tasks.
+
+### Permutations and Combinations
+
+**Permutations**: The number of ways to arrange n distinct objects in order is:
+<Equation math="n! = n \\times (n-1) \\times (n-2) \\times \\ldots \\times 1" display={true} />
+
+More generally, the number of ways to arrange r objects chosen from n distinct objects is:
+<Equation math="P(n,r) = \\frac{n!}{(n-r)!}" display={true} />
+
+**Combinations**: The number of ways to choose r objects from n distinct objects without regard to order is:
+<Equation math="C(n,r) = \\binom{n}{r} = \\frac{n!}{r!(n-r)!}" display={true} />
+
+<CodeBlock 
+  filename="combinatorics.py" 
+  lang="python"
+  code={`import math
+from math import factorial, comb
+
+def poker_hand_probability():
+    """Calculate probability of different poker hands"""
+    # Total number of 5-card hands from 52-card deck
+    total_hands = comb(52, 5)
+    print(f"Total possible 5-card hands: {total_hands:,}")
+    
+    # Royal flush: A, K, Q, J, 10 of same suit
+    royal_flushes = 4  # One for each suit
+    prob_royal_flush = royal_flushes / total_hands
+    
+    # Four of a kind: 4 cards of same rank + 1 other
+    four_of_a_kind = 13 * comb(48, 1)  # 13 ranks, choose 1 from remaining 48
+    prob_four_of_a_kind = four_of_a_kind / total_hands
+    
+    # Full house: 3 of one rank + 2 of another
+    full_house = comb(13, 1) * comb(4, 3) * comb(12, 1) * comb(4, 2)
+    prob_full_house = full_house / total_hands
+    
+    print(f"\\nPoker Hand Probabilities:")
+    print(f"Royal Flush: {prob_royal_flush:.2e} ({royal_flushes:,} hands)")
+    print(f"Four of a Kind: {prob_four_of_a_kind:.4f} ({four_of_a_kind:,} hands)")
+    print(f"Full House: {prob_full_house:.4f} ({full_house:,} hands)")
+    
+    return {
+        'royal_flush': prob_royal_flush,
+        'four_of_a_kind': prob_four_of_a_kind,
+        'full_house': prob_full_house
+    }
+
+# Calculate poker probabilities
+poker_probs = poker_hand_probability()`}
+/>
+
+## Probability Distributions: The Bridge to Applications
+
+Probability distributions provide the mathematical framework for describing the behavior of random variables, which are functions that assign numerical values to the outcomes of random experiments. Understanding distributions is crucial because they allow us to move from abstract probability spaces to concrete numerical analysis.
+
+### Discrete vs. Continuous Distributions
+
+**Discrete Distributions** apply when the random variable can take on only countably many values. Examples include:
+- Number of heads in coin flips
+- Number of customers arriving at a store  
+- Number of defective items in a batch
+
+For discrete random variables, we use the **probability mass function (PMF)** p(x) = P(X = x).
+
+**Continuous Distributions** apply when the random variable can take on any value in some interval. Examples include:
+- Heights, weights, temperatures
+- Stock prices, measurement errors
+- Time between events
+
+For continuous random variables, we use the **probability density function (PDF)** f(x).
+
+### Cumulative Distribution Functions
+
+The **cumulative distribution function (CDF)** F(x) = P(X ≤ x) provides a unified way to describe both discrete and continuous distributions.
+
+<CodeBlock 
+  filename="distributions.py" 
+  lang="python"
+  code={`import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+def compare_distributions():
+    """Compare discrete and continuous distributions"""
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    
+    # Discrete: Binomial distribution
+    n, p = 20, 0.3
+    x_discrete = np.arange(0, n+1)
+    pmf_values = stats.binom.pmf(x_discrete, n, p)
+    cdf_discrete = stats.binom.cdf(x_discrete, n, p)
+    
+    axes[0,0].bar(x_discrete, pmf_values, alpha=0.7)
+    axes[0,0].set_title('Binomial PMF (n=20, p=0.3)')
+    axes[0,0].set_xlabel('k')
+    axes[0,0].set_ylabel('P(X = k)')
+    
+    axes[0,1].step(x_discrete, cdf_discrete, where='post')
+    axes[0,1].set_title('Binomial CDF')
+    axes[0,1].set_xlabel('k')
+    axes[0,1].set_ylabel('P(X ≤ k)')
+    
+    # Continuous: Normal distribution
+    x_continuous = np.linspace(-4, 4, 100)
+    pdf_values = stats.norm.pdf(x_continuous, 0, 1)
+    cdf_continuous = stats.norm.cdf(x_continuous, 0, 1)
+    
+    axes[1,0].plot(x_continuous, pdf_values, 'b-', linewidth=2)
+    axes[1,0].fill_between(x_continuous, pdf_values, alpha=0.3)
+    axes[1,0].set_title('Normal PDF (μ=0, σ=1)')
+    axes[1,0].set_xlabel('x')
+    axes[1,0].set_ylabel('f(x)')
+    
+    axes[1,1].plot(x_continuous, cdf_continuous, 'r-', linewidth=2)
+    axes[1,1].set_title('Normal CDF')
+    axes[1,1].set_xlabel('x')
+    axes[1,1].set_ylabel('P(X ≤ x)')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Calculate some probabilities
+    print("Distribution Examples:")
+    print(f"Binomial: P(X = 6) = {stats.binom.pmf(6, n, p):.4f}")
+    print(f"Binomial: P(X ≤ 6) = {stats.binom.cdf(6, n, p):.4f}")
+    print(f"Normal: P(-1 ≤ X ≤ 1) = {stats.norm.cdf(1) - stats.norm.cdf(-1):.4f}")
+    print(f"Normal: 95th percentile = {stats.norm.ppf(0.95):.4f}")
+
+# Run distribution comparison
+compare_distributions()`}
+/>
+
+### Expected Value and Variance
+
+The **expected value** (or mean) of a random variable provides a measure of its central tendency:
+- **Discrete**: E[X] = Σ x × p(x)
+- **Continuous**: E[X] = ∫ x × f(x)dx
+
+The **variance** measures the spread or dispersion of the distribution:
+<Equation math="Var(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2" display={true} />
+
+---
+
+The mathematical foundations we've explored in this section provide the rigorous framework necessary for all subsequent probabilistic reasoning. While these concepts might seem abstract, they have immediate practical applications in every area where uncertainty exists. In the following sections, we'll see how these theoretical foundations translate into computational tools and real-world problem-solving capabilities through Python implementation.
+
+<Pager 
+  prevPage={{ href: "/introduction", title: "Introduction" }}
+  nextPage={{ href: "/python-setup", title: "Python Environment Setup" }}
+/>
