@@ -1,0 +1,323 @@
+---
+title: "Statistical Inference and Hypothesis Testing"
+description: "Learn statistical inference, hypothesis testing, confidence intervals, and their Python implementations"
+---
+
+import Prose from '../components/ui/Prose.astro';
+import Callout from '../components/ui/Callout.astro';
+import Equation from '../components/ui/Equation.astro';
+import Figure from '../components/ui/Figure.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<Prose>
+
+# Statistical Inference and Hypothesis Testing
+
+Statistical inference allows us to draw conclusions about populations based on sample data, quantifying our uncertainty through probability theory.
+
+<Callout variant="note">
+**Learning Objectives**
+
+By the end of this chapter, you will:
+- Understand the principles of statistical inference
+- Perform hypothesis tests using Python
+- Calculate and interpret confidence intervals
+- Apply the Central Limit Theorem in practice
+</Callout>
+
+## The Foundation: Central Limit Theorem
+
+The Central Limit Theorem (CLT) is one of the most important results in statistics. It states that the sampling distribution of the sample mean approaches a normal distribution as the sample size increases, regardless of the population distribution.
+
+<Callout variant="theorem">
+**Central Limit Theorem**
+
+For a population with mean μ and standard deviation σ, the sampling distribution of the sample mean X̄ from samples of size n has:
+- Mean: μ
+- Standard deviation: σ/√n
+- Distribution: approximately normal for large n (typically n ≥ 30)
+</Callout>
+
+### Demonstrating the CLT
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Create a highly skewed population (exponential distribution)
+population_size = 100000
+population = np.random.exponential(scale=2, size=population_size)
+
+print(f"Population mean: {np.mean(population):.4f}")
+print(f"Population std: {np.std(population):.4f}")
+
+# Sample means for different sample sizes
+sample_sizes = [5, 30, 100]
+n_samples = 1000
+
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+
+# Plot original population
+axes[0, 0].hist(population[:1000], bins=50, alpha=0.7, density=True)
+axes[0, 0].set_title('Original Population (Exponential)')
+axes[0, 0].set_xlabel('Value')
+axes[0, 0].set_ylabel('Density')
+
+# Plot sampling distributions
+for i, n in enumerate(sample_sizes):
+    sample_means = []
+    for _ in range(n_samples):
+        sample = np.random.choice(population, size=n)
+        sample_means.append(np.mean(sample))
+    
+    row = (i + 1) // 2
+    col = (i + 1) % 2
+    
+    axes[row, col].hist(sample_means, bins=50, alpha=0.7, density=True)
+    axes[row, col].set_title(f'Sample Means (n={n})')
+    axes[row, col].set_xlabel('Sample Mean')
+    axes[row, col].set_ylabel('Density')
+    
+    # Overlay theoretical normal distribution
+    theoretical_mean = np.mean(population)
+    theoretical_std = np.std(population) / np.sqrt(n)
+    x = np.linspace(min(sample_means), max(sample_means), 100)
+    y = stats.norm.pdf(x, theoretical_mean, theoretical_std)
+    axes[row, col].plot(x, y, 'r-', linewidth=2, label='Theoretical Normal')
+    axes[row, col].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+## Hypothesis Testing Framework
+
+Hypothesis testing provides a systematic approach to making decisions about population parameters based on sample data.
+
+### The Process
+
+1. **State hypotheses**: Null (H₀) and alternative (H₁)
+2. **Choose significance level**: α (typically 0.05)
+3. **Calculate test statistic**: Based on sample data
+4. **Determine p-value**: Probability of observing data given H₀ is true
+5. **Make decision**: Reject H₀ if p-value < α
+
+### Example: One-Sample t-Test
+
+```python
+from scipy import stats
+import numpy as np
+
+# Example: Testing if a new teaching method improves test scores
+# H₀: μ = 75 (no improvement)
+# H₁: μ > 75 (improvement)
+
+# Sample data
+np.random.seed(42)
+sample_scores = np.random.normal(78, 10, 30)  # True mean is 78
+sample_mean = np.mean(sample_scores)
+sample_std = np.std(sample_scores, ddof=1)
+n = len(sample_scores)
+
+print(f"Sample mean: {sample_mean:.2f}")
+print(f"Sample std: {sample_std:.2f}")
+print(f"Sample size: {n}")
+
+# Perform one-sample t-test
+null_mean = 75
+t_statistic, p_value = stats.ttest_1samp(sample_scores, null_mean)
+
+print(f"\nHypothesis Test Results:")
+print(f"t-statistic: {t_statistic:.4f}")
+print(f"p-value: {p_value:.4f}")
+
+# Decision
+alpha = 0.05
+if p_value < alpha:
+    print(f"Reject H₀ (p < {alpha}): Evidence suggests improvement")
+else:
+    print(f"Fail to reject H₀ (p ≥ {alpha}): No significant evidence of improvement")
+
+# Calculate effect size (Cohen's d)
+cohens_d = (sample_mean - null_mean) / sample_std
+print(f"Effect size (Cohen's d): {cohens_d:.4f}")
+```
+
+## Confidence Intervals
+
+Confidence intervals provide a range of plausible values for a population parameter, quantifying our uncertainty.
+
+### Interpreting Confidence Intervals
+
+A 95% confidence interval means that if we repeated our sampling process many times, 95% of the intervals would contain the true population parameter.
+
+```python
+from scipy import stats
+import numpy as np
+
+def calculate_confidence_interval(data, confidence=0.95):
+    """Calculate confidence interval for the mean"""
+    n = len(data)
+    mean = np.mean(data)
+    std_err = stats.sem(data)  # Standard error of the mean
+    
+    # t-critical value
+    alpha = 1 - confidence
+    t_critical = stats.t.ppf(1 - alpha/2, df=n-1)
+    
+    # Margin of error
+    margin_error = t_critical * std_err
+    
+    # Confidence interval
+    ci_lower = mean - margin_error
+    ci_upper = mean + margin_error
+    
+    return mean, ci_lower, ci_upper, margin_error
+
+# Example with sample data
+np.random.seed(42)
+sample_data = np.random.normal(100, 15, 50)
+
+mean, ci_lower, ci_upper, margin_error = calculate_confidence_interval(sample_data)
+
+print(f"Sample mean: {mean:.2f}")
+print(f"95% Confidence Interval: [{ci_lower:.2f}, {ci_upper:.2f}]")
+print(f"Margin of error: ±{margin_error:.2f}")
+
+# Demonstrate the concept with multiple samples
+n_simulations = 1000
+confidence_level = 0.95
+true_mean = 100
+
+intervals_contain_true_mean = 0
+
+for _ in range(n_simulations):
+    sample = np.random.normal(true_mean, 15, 50)
+    _, ci_low, ci_high, _ = calculate_confidence_interval(sample, confidence_level)
+    
+    if ci_low <= true_mean <= ci_high:
+        intervals_contain_true_mean += 1
+
+coverage_rate = intervals_contain_true_mean / n_simulations
+print(f"\nCoverage rate: {coverage_rate:.3f}")
+print(f"Expected coverage rate: {confidence_level:.3f}")
+```
+
+## Common Statistical Tests
+
+### Two-Sample t-Test
+
+```python
+# Compare two groups
+np.random.seed(42)
+group1 = np.random.normal(75, 10, 30)  # Control group
+group2 = np.random.normal(80, 10, 30)  # Treatment group
+
+# Independent samples t-test
+t_stat, p_value = stats.ttest_ind(group1, group2)
+
+print("Two-Sample t-Test:")
+print(f"Group 1 mean: {np.mean(group1):.2f}")
+print(f"Group 2 mean: {np.mean(group2):.2f}")
+print(f"t-statistic: {t_stat:.4f}")
+print(f"p-value: {p_value:.4f}")
+
+if p_value < 0.05:
+    print("Significant difference between groups")
+else:
+    print("No significant difference between groups")
+```
+
+### Chi-Square Test of Independence
+
+```python
+from scipy.stats import chi2_contingency
+
+# Example: Testing independence between treatment and outcome
+# Contingency table
+observed = np.array([[20, 30],   # Treatment A: Success, Failure
+                     [15, 35]])  # Treatment B: Success, Failure
+
+chi2_stat, p_value, dof, expected = chi2_contingency(observed)
+
+print("Chi-Square Test of Independence:")
+print(f"Chi-square statistic: {chi2_stat:.4f}")
+print(f"p-value: {p_value:.4f}")
+print(f"Degrees of freedom: {dof}")
+
+print("\nObserved frequencies:")
+print(observed)
+print("\nExpected frequencies:")
+print(expected.round(2))
+
+if p_value < 0.05:
+    print("Variables are dependent")
+else:
+    print("Variables are independent")
+```
+
+## Power Analysis
+
+Statistical power is the probability of correctly rejecting a false null hypothesis. Understanding power helps in designing studies and interpreting results.
+
+```python
+from scipy import stats
+import numpy as np
+
+def calculate_power(effect_size, sample_size, alpha=0.05):
+    """Calculate statistical power for one-sample t-test"""
+    # Non-centrality parameter
+    ncp = effect_size * np.sqrt(sample_size)
+    
+    # Critical t-value
+    t_critical = stats.t.ppf(1 - alpha/2, df=sample_size-1)
+    
+    # Power calculation
+    power = 1 - stats.t.cdf(t_critical, df=sample_size-1, loc=ncp)
+    power += stats.t.cdf(-t_critical, df=sample_size-1, loc=ncp)
+    
+    return power
+
+# Power analysis for different scenarios
+effect_sizes = [0.2, 0.5, 0.8]  # Small, medium, large effects
+sample_sizes = range(10, 101, 10)
+
+print("Power Analysis Results:")
+print("Sample Size | Small Effect | Medium Effect | Large Effect")
+print("-" * 55)
+
+for n in sample_sizes:
+    powers = [calculate_power(es, n) for es in effect_sizes]
+    print(f"{n:10d} | {powers[0]:11.3f} | {powers[1]:12.3f} | {powers[2]:11.3f}")
+```
+
+## Key Takeaways
+
+- **Central Limit Theorem** enables statistical inference by ensuring sampling distributions are approximately normal
+- **Hypothesis testing** provides a framework for making decisions under uncertainty
+- **Confidence intervals** quantify uncertainty about population parameters
+- **Effect size** measures practical significance beyond statistical significance
+- **Power analysis** helps design studies and interpret negative results
+
+<Callout variant="warning">
+**Common Pitfalls**
+
+- Confusing statistical significance with practical significance
+- Multiple testing without correction increases Type I error
+- Assuming causation from correlation
+- Ignoring assumptions of statistical tests
+</Callout>
+
+<Pager 
+  prev={{ title: "Random Variables", href: "/random-variables" }}
+  next={{ title: "Monte Carlo Methods", href: "/monte-carlo" }}
+/>
+
+</Prose>
+
+<OnThisPage />
