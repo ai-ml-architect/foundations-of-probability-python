@@ -1,0 +1,604 @@
+ ---
+layout: '../layouts/ContentLayout.astro'
+title: "Hands-On Labs and Exercises"
+description: "Interactive exercises and practical labs to reinforce probability concepts through Python implementation"
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'lab-1-monte-carlo', text: 'Lab 1: Monte Carlo Estimation of π' },
+  { depth: 3, slug: 'exercise-1-1', text: 'Exercise 1.1: Basic Implementation' },
+  { depth: 3, slug: 'exercise-1-2', text: 'Exercise 1.2: Convergence Analysis' },
+  { depth: 2, slug: 'lab-2-bayesian-coin', text: 'Lab 2: Bayesian Coin Flipping' },
+  { depth: 3, slug: 'exercise-2-1', text: 'Exercise 2.1: Prior and Posterior' },
+  { depth: 3, slug: 'exercise-2-2', text: 'Exercise 2.2: Sequential Updating' },
+  { depth: 2, slug: 'lab-3-hypothesis-testing', text: 'Lab 3: Statistical Hypothesis Testing' },
+  { depth: 3, slug: 'exercise-3-1', text: 'Exercise 3.1: Power Analysis' },
+  { depth: 3, slug: 'exercise-3-2', text: 'Exercise 3.2: Multiple Testing Correction' },
+  { depth: 2, slug: 'lab-4-monte-carlo-integration', text: 'Lab 4: Monte Carlo Integration' },
+  { depth: 3, slug: 'exercise-4-1', text: 'Exercise 4.1: Basic Integration' },
+  { depth: 3, slug: 'exercise-4-2', text: 'Exercise 4.2: High-Dimensional Integration' },
+  { depth: 2, slug: 'lab-5-markov-chain', text: 'Lab 5: Markov Chain Simulation' },
+  { depth: 3, slug: 'exercise-5-1', text: 'Exercise 5.1: Weather Model' },
+  { depth: 3, slug: 'exercise-5-2', text: 'Exercise 5.2: Random Walk' },
+  { depth: 2, slug: 'lab-6-bayesian-regression', text: 'Lab 6: Bayesian Linear Regression' },
+  { depth: 3, slug: 'exercise-6-1', text: 'Exercise 6.1: Bayesian Parameter Estimation' },
+  { depth: 2, slug: 'lab-solutions', text: 'Lab Solutions and Extensions' },
+  { depth: 2, slug: 'lab-assessment', text: 'Lab Assessment Rubric' }
+]} />
+
+# Hands-On Labs and Exercises
+
+These practical exercises provide hands-on experience with probability concepts through Python implementation. Each lab builds on previous concepts and includes both guided exercises and open-ended challenges.
+
+<Callout variant="note">
+**Lab Structure**
+
+Each lab includes:
+- **Learning objectives** and prerequisites
+- **Step-by-step guided exercises**
+- **Challenge problems** for deeper exploration
+- **Solutions and explanations**
+- **Extensions** for advanced learners
+</Callout>
+
+## Lab 1: Monte Carlo Estimation of π
+
+**Objective**: Understand Monte Carlo methods by estimating π through random sampling.
+
+**Prerequisites**: Basic Python, NumPy basics
+
+**Concept**: We can estimate π by randomly throwing darts at a unit square containing a quarter circle. The ratio of darts inside the circle to total darts approximates π/4.
+
+### Exercise 1.1: Basic Implementation
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def estimate_pi_basic(n_samples):
+    """
+    Estimate π using Monte Carlo method
+    
+    Args:
+        n_samples: Number of random points to generate
+    
+    Returns:
+        Estimated value of π
+    """
+    # TODO: Implement the basic Monte Carlo π estimation
+    # Hint: Generate random points in [0,1] x [0,1]
+    # Check if they fall inside the unit circle
+    # Return 4 * (points inside circle) / (total points)
+    
+    pass
+
+# Test your implementation
+np.random.seed(42)
+pi_estimate = estimate_pi_basic(100000)
+print(f"Estimated π: {pi_estimate:.6f}")
+print(f"Actual π: {np.pi:.6f}")
+print(f"Error: {abs(pi_estimate - np.pi):.6f}")
+```
+
+**Solution**:
+```python
+def estimate_pi_basic(n_samples):
+    # Generate random points in unit square
+    x = np.random.uniform(0, 1, n_samples)
+    y = np.random.uniform(0, 1, n_samples)
+    
+    # Check if points are inside unit circle
+    inside_circle = (x**2 + y**2) <= 1
+    
+    # Estimate π
+    pi_estimate = 4 * np.sum(inside_circle) / n_samples
+    return pi_estimate
+```
+
+### Exercise 1.2: Convergence Analysis
+
+```python
+def analyze_convergence():
+    """Analyze how the estimate converges as sample size increases"""
+    
+    sample_sizes = np.logspace(2, 6, 50).astype(int)
+    estimates = []
+    errors = []
+    
+    np.random.seed(42)
+    for n in sample_sizes:
+        pi_est = estimate_pi_basic(n)
+        estimates.append(pi_est)
+        errors.append(abs(pi_est - np.pi))
+    
+    # Plot convergence
+    plt.figure(figsize=(12, 5))
+    
+    plt.subplot(1, 2, 1)
+    plt.semilogx(sample_sizes, estimates, 'b-', alpha=0.7)
+    plt.axhline(np.pi, color='red', linestyle='--', label='True π')
+    plt.xlabel('Sample Size')
+    plt.ylabel('π Estimate')
+    plt.title('Convergence of π Estimate')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.subplot(1, 2, 2)
+    plt.loglog(sample_sizes, errors, 'r-', alpha=0.7, label='Observed Error')
+    plt.loglog(sample_sizes, 1/np.sqrt(sample_sizes), 'g--', label='1/√n (theoretical)')
+    plt.xlabel('Sample Size')
+    plt.ylabel('Absolute Error')
+    plt.title('Error vs Sample Size')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+
+analyze_convergence()
+```
+
+### Challenge 1.1: Variance Reduction
+
+Implement importance sampling to reduce the variance of your π estimate. Compare the efficiency with the basic method.
+
+### Challenge 1.2: Parallel Implementation
+
+Use Python's multiprocessing to parallelize the Monte Carlo estimation. Measure the speedup achieved.
+
+## Lab 2: Bayesian Coin Flipping
+
+**Objective**: Understand Bayesian inference through a simple coin flipping example.
+
+**Prerequisites**: Basic probability, Beta distribution
+
+**Concept**: Use Bayesian inference to estimate the bias of a coin, updating beliefs as we observe more flips.
+
+### Exercise 2.1: Prior and Posterior
+
+```python
+from scipy import stats
+import matplotlib.pyplot as plt
+
+def bayesian_coin_analysis(flips, prior_alpha=1, prior_beta=1):
+    """
+    Perform Bayesian analysis of coin flips
+    
+    Args:
+        flips: List of coin flip results (1 for heads, 0 for tails)
+        prior_alpha, prior_beta: Beta distribution parameters for prior
+    
+    Returns:
+        Dictionary with analysis results
+    """
+    n_heads = sum(flips)
+    n_flips = len(flips)
+    
+    # TODO: Calculate posterior parameters
+    # Hint: For Beta-Binomial conjugacy:
+    # posterior_alpha = prior_alpha + n_heads
+    # posterior_beta = prior_beta + n_flips - n_heads
+    
+    posterior_alpha = None  # Fill this in
+    posterior_beta = None   # Fill this in
+    
+    # Create distributions
+    prior = stats.beta(prior_alpha, prior_beta)
+    posterior = stats.beta(posterior_alpha, posterior_beta)
+    
+    return {
+        'prior': prior,
+        'posterior': posterior,
+        'n_heads': n_heads,
+        'n_flips': n_flips,
+        'posterior_mean': posterior.mean(),
+        'posterior_std': posterior.std(),
+        'credible_interval': posterior.ppf([0.025, 0.975])
+    }
+
+# Simulate coin flips
+np.random.seed(42)
+true_bias = 0.7
+flips = np.random.binomial(1, true_bias, 50)
+
+# Analyze with different priors
+results = bayesian_coin_analysis(flips)
+print(f"Observed: {results['n_heads']} heads out of {results['n_flips']} flips")
+print(f"Posterior mean: {results['posterior_mean']:.3f}")
+print(f"95% Credible interval: [{results['credible_interval'][0]:.3f}, {results['credible_interval'][1]:.3f}]")
+```
+
+**Solution**:
+```python
+posterior_alpha = prior_alpha + n_heads
+posterior_beta = prior_beta + n_flips - n_heads
+```
+
+### Exercise 2.2: Sequential Updating
+
+```python
+def sequential_bayesian_update(flips, prior_alpha=1, prior_beta=1):
+    """Show how beliefs update with each new observation"""
+    
+    theta_range = np.linspace(0, 1, 1000)
+    
+    # Store posterior after each flip
+    posteriors = []
+    alpha, beta = prior_alpha, prior_beta
+    
+    for i, flip in enumerate(flips):
+        if flip == 1:  # Heads
+            alpha += 1
+        else:  # Tails
+            beta += 1
+        
+        posterior = stats.beta(alpha, beta)
+        posteriors.append(posterior.pdf(theta_range))
+    
+    # Plot evolution
+    plt.figure(figsize=(12, 8))
+    
+    # Show first few updates
+    updates_to_show = [0, 4, 9, 19, len(flips)-1]
+    
+    for i, update_idx in enumerate(updates_to_show):
+        plt.subplot(2, 3, i+1)
+        plt.plot(theta_range, posteriors[update_idx], 'b-', linewidth=2)
+        plt.axvline(true_bias, color='red', linestyle='--', label='True bias')
+        plt.xlabel('Coin Bias (θ)')
+        plt.ylabel('Density')
+        plt.title(f'After {update_idx + 1} flips')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+
+sequential_bayesian_update(flips[:20])
+```
+
+### Challenge 2.1: Model Comparison
+
+Compare different prior beliefs (uniform, pessimistic, optimistic) and show how they affect the posterior as more data is observed.
+
+### Challenge 2.2: Predictive Distribution
+
+Implement the posterior predictive distribution to predict the outcome of future coin flips.
+
+## Lab 3: Statistical Hypothesis Testing
+
+**Objective**: Understand hypothesis testing through simulation and real data analysis.
+
+**Prerequisites**: Normal distribution, t-distribution, p-values
+
+### Exercise 3.1: Power Analysis
+
+```python
+from scipy import stats
+
+def power_analysis_simulation(effect_size, sample_size, alpha=0.05, n_simulations=10000):
+    """
+    Simulate statistical power for a one-sample t-test
+    
+    Args:
+        effect_size: True effect size (Cohen's d)
+        sample_size: Sample size for each test
+        alpha: Significance level
+        n_simulations: Number of simulations to run
+    
+    Returns:
+        Estimated statistical power
+    """
+    
+    significant_results = 0
+    
+    for _ in range(n_simulations):
+        # TODO: Generate sample data with the specified effect size
+        # Hint: Generate from normal distribution with mean = effect_size
+        # Perform one-sample t-test against null hypothesis (mean = 0)
+        # Count how many times p-value < alpha
+        
+        pass
+    
+    power = significant_results / n_simulations
+    return power
+
+# Test different scenarios
+effect_sizes = [0.2, 0.5, 0.8]  # Small, medium, large effects
+sample_sizes = [10, 20, 30, 50, 100]
+
+print("Power Analysis Results:")
+print("Sample Size | Small Effect | Medium Effect | Large Effect")
+print("-" * 55)
+
+for n in sample_sizes:
+    powers = [power_analysis_simulation(es, n) for es in effect_sizes]
+    print(f"{n:10d} | {powers[0]:11.3f} | {powers[1]:12.3f} | {powers[2]:11.3f}")
+```
+
+**Solution**:
+```python
+def power_analysis_simulation(effect_size, sample_size, alpha=0.05, n_simulations=10000):
+    significant_results = 0
+    
+    for _ in range(n_simulations):
+        # Generate sample with effect
+        sample = np.random.normal(effect_size, 1, sample_size)
+        
+        # Perform one-sample t-test
+        t_stat, p_value = stats.ttest_1samp(sample, 0)
+        
+        if p_value < alpha:
+            significant_results += 1
+    
+    return significant_results / n_simulations
+```
+
+### Exercise 3.2: Multiple Testing Correction
+
+```python
+def multiple_testing_demo():
+    """Demonstrate the multiple testing problem and corrections"""
+    
+    np.random.seed(42)
+    n_tests = 100
+    alpha = 0.05
+    
+    # Generate null data (no real effects)
+    p_values = []
+    
+    for i in range(n_tests):
+        # TODO: Generate two independent samples from same distribution
+        # Perform t-test and collect p-values
+        # Apply Bonferroni correction
+        # Compare results
+        
+        pass
+    
+    # TODO: Implement Bonferroni correction
+    # bonferroni_alpha = alpha / n_tests
+    
+    # TODO: Count significant results before and after correction
+
+multiple_testing_demo()
+```
+
+### Challenge 3.1: False Discovery Rate
+
+Implement the Benjamini-Hochberg procedure for controlling the false discovery rate and compare it with Bonferroni correction.
+
+## Lab 4: Monte Carlo Integration
+
+**Objective**: Use Monte Carlo methods to solve integration problems that are difficult analytically.
+
+**Prerequisites**: Integration concepts, Monte Carlo basics
+
+### Exercise 4.1: Basic Integration
+
+```python
+def monte_carlo_integration(func, a, b, n_samples):
+    """
+    Estimate integral using Monte Carlo method
+    
+    Args:
+        func: Function to integrate
+        a, b: Integration bounds
+        n_samples: Number of random samples
+    
+    Returns:
+        Estimated integral value
+    """
+    
+    # TODO: Implement Monte Carlo integration
+    # Hint: Generate uniform random samples in [a, b]
+    # Evaluate function at sample points
+    # Estimate integral as (b-a) * mean(function values)
+    
+    pass
+
+# Test with known integral
+def test_function(x):
+    return x**2
+
+# Analytical result: ∫₀¹ x² dx = 1/3
+analytical_result = 1/3
+mc_result = monte_carlo_integration(test_function, 0, 1, 100000)
+
+print(f"Analytical result: {analytical_result:.6f}")
+print(f"Monte Carlo result: {mc_result:.6f}")
+print(f"Error: {abs(mc_result - analytical_result):.6f}")
+```
+
+### Exercise 4.2: High-Dimensional Integration
+
+```python
+def high_dimensional_integration():
+    """Demonstrate Monte Carlo advantage in high dimensions"""
+    
+    def sphere_volume_integrand(x):
+        """Integrand for unit sphere volume in n dimensions"""
+        return 1 if np.sum(x**2) <= 1 else 0
+    
+    dimensions = [2, 3, 4, 5, 6]
+    n_samples = 1000000
+    
+    print("High-Dimensional Integration Results:")
+    print("Dimension | MC Estimate | Analytical | Error")
+    print("-" * 45)
+    
+    for d in dimensions:
+        # TODO: Implement high-dimensional Monte Carlo integration
+        # Generate random points in d-dimensional unit cube
+        # Count points inside unit sphere
+        # Estimate volume
+        
+        pass
+
+high_dimensional_integration()
+```
+
+### Challenge 4.1: Importance Sampling
+
+Implement importance sampling to improve the efficiency of Monte Carlo integration for functions with most mass concentrated in a small region.
+
+## Lab 5: Markov Chain Simulation
+
+**Objective**: Understand Markov chains through simulation and analysis.
+
+**Prerequisites**: Markov chains, matrix operations
+
+### Exercise 5.1: Weather Model
+
+```python
+def simulate_weather_markov_chain():
+    """Simulate a simple weather model using Markov chains"""
+    
+    # Transition matrix: [Sunny, Cloudy, Rainy]
+    P = np.array([
+        [0.7, 0.2, 0.1],  # From Sunny
+        [0.3, 0.4, 0.3],  # From Cloudy  
+        [0.2, 0.3, 0.5]   # From Rainy
+    ])
+    
+    states = ['Sunny', 'Cloudy', 'Rainy']
+    
+    # TODO: Simulate weather for 30 days starting from Sunny
+    # TODO: Calculate empirical transition frequencies
+    # TODO: Compare with theoretical steady-state distribution
+    
+    pass
+
+simulate_weather_markov_chain()
+```
+
+### Exercise 5.2: Random Walk
+
+```python
+def random_walk_analysis():
+    """Analyze properties of random walks"""
+    
+    def simulate_random_walk(n_steps, p=0.5):
+        """Simulate 1D random walk"""
+        # TODO: Implement random walk simulation
+        # +1 with probability p, -1 with probability 1-p
+        # Return cumulative position over time
+        pass
+    
+    # TODO: Simulate multiple random walks
+    # TODO: Analyze distribution of final positions
+    # TODO: Calculate mean squared displacement
+    
+    pass
+
+random_walk_analysis()
+```
+
+### Challenge 5.1: PageRank Algorithm
+
+Implement a simplified version of the PageRank algorithm using Markov chain theory.
+
+## Lab 6: Bayesian Linear Regression
+
+**Objective**: Implement Bayesian linear regression and compare with frequentist approach.
+
+**Prerequisites**: Linear regression, Bayesian inference, conjugate priors
+
+### Exercise 6.1: Bayesian Parameter Estimation
+
+```python
+def bayesian_linear_regression(X, y, alpha_prior=1e-3, beta_prior=1e-3):
+    """
+    Implement Bayesian linear regression with conjugate priors
+    
+    Args:
+        X: Design matrix (n_samples x n_features)
+        y: Target values
+        alpha_prior: Prior precision for weights
+        beta_prior: Prior precision for noise
+    
+    Returns:
+        Dictionary with posterior parameters
+    """
+    
+    # TODO: Implement Bayesian linear regression
+    # Use conjugate Normal-Gamma priors
+    # Return posterior mean and covariance for weights
+    
+    pass
+
+# Generate synthetic data
+np.random.seed(42)
+n_points = 50
+true_slope = 2.0
+true_intercept = 1.0
+noise_std = 0.5
+
+x = np.linspace(0, 5, n_points)
+y = true_intercept + true_slope * x + np.random.normal(0, noise_std, n_points)
+
+# Add intercept term
+X = np.column_stack([np.ones(n_points), x])
+
+# Compare Bayesian and frequentist results
+bayesian_results = bayesian_linear_regression(X, y)
+# TODO: Compare with sklearn LinearRegression
+```
+
+### Challenge 6.1: Model Selection
+
+Implement Bayesian model selection to choose between polynomial models of different degrees.
+
+## Lab Solutions and Extensions
+
+<Callout variant="tip">
+**Working with the Labs**
+
+1. **Start Simple**: Begin with the guided exercises before attempting challenges
+2. **Test Your Code**: Always test with known results when possible
+3. **Visualize Results**: Create plots to understand what your code is doing
+4. **Experiment**: Try different parameters and see how results change
+5. **Read the Errors**: Python error messages are usually helpful
+</Callout>
+
+### Getting Help
+
+If you're stuck on any exercise:
+
+1. **Check the Prerequisites**: Make sure you understand the underlying concepts
+2. **Review the Theory**: Go back to the relevant chapter sections
+3. **Start with Pseudocode**: Write out the algorithm in plain English first
+4. **Use Print Statements**: Debug by printing intermediate results
+5. **Search Documentation**: NumPy and SciPy docs have excellent examples
+
+### Extensions for Advanced Learners
+
+1. **Performance Optimization**: Use Numba or Cython to speed up computations
+2. **Parallel Computing**: Implement parallel versions using multiprocessing
+3. **Interactive Visualizations**: Create interactive plots using Plotly or Bokeh
+4. **Real Data Applications**: Apply methods to real datasets from your field
+5. **Advanced Methods**: Implement more sophisticated algorithms like HMC or variational inference
+
+## Lab Assessment Rubric
+
+**Beginner Level** (Exercises 1.1, 2.1, 3.1, 4.1, 5.1, 6.1):
+- Correct implementation of basic algorithms
+- Understanding of fundamental concepts
+- Ability to interpret results
+
+**Intermediate Level** (Exercises 1.2, 2.2, 3.2, 4.2, 5.2):
+- More complex implementations
+- Analysis and visualization of results
+- Understanding of convergence and accuracy
+
+**Advanced Level** (All Challenges):
+- Independent problem solving
+- Implementation of advanced techniques
+- Creative extensions and applications
+
+  prev={{ title: "Glossary", href: "/glossary" }}
+  next={{ title: "Home", href: "/" }}
+/>
