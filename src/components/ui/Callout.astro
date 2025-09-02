@@ -1,0 +1,96 @@
+---
+export interface Props {
+  variant?: 'note' | 'tip' | 'warning' | 'theorem' | 'definition' | 'example';
+  title?: string;
+  class?: string;
+}
+
+const { variant = 'note', title, class: className = "" } = Astro.props;
+
+const variantStyles = {
+  note: {
+    container: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
+    icon: '📝',
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    title: title || 'Note'
+  },
+  tip: {
+    container: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30',
+    icon: '💡',
+    iconColor: 'text-green-600 dark:text-green-400',
+    title: title || 'Tip'
+  },
+  warning: {
+    container: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30',
+    icon: '⚠️',
+    iconColor: 'text-yellow-600 dark:text-yellow-400',
+    title: title || 'Warning'
+  },
+  theorem: {
+    container: 'border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/30',
+    icon: '🔬',
+    iconColor: 'text-purple-600 dark:text-purple-400',
+    title: title || 'Theorem'
+  },
+  definition: {
+    container: 'border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-950/30',
+    icon: '📖',
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    title: title || 'Definition'
+  },
+  example: {
+    container: 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30',
+    icon: '📊',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+    title: title || 'Example'
+  }
+};
+
+const styles = variantStyles[variant];
+---
+
+<div class={`callout border-l-4 rounded-r-lg p-4 my-6 ${styles.container} ${className}`} role="note" aria-labelledby="callout-title">
+  <div class="flex items-start space-x-3">
+    <div class={`flex-shrink-0 text-lg ${styles.iconColor}`} aria-hidden="true">
+      {styles.icon}
+    </div>
+    <div class="flex-1 min-w-0">
+      <h4 id="callout-title" class={`font-display font-semibold text-sm uppercase tracking-wide mb-2 ${styles.iconColor}`}>
+        {styles.title}
+      </h4>
+      <div class="prose prose-sm max-w-none text-foreground/90">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .callout .prose {
+    /* Override prose styles within callouts */
+    color: inherit;
+  }
+  
+  .callout .prose p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .callout .prose h1,
+  .callout .prose h2,
+  .callout .prose h3,
+  .callout .prose h4,
+  .callout .prose h5,
+  .callout .prose h6 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .callout .prose ul,
+  .callout .prose ol {
+    margin-bottom: 0;
+  }
+  
+  .callout .prose li:last-child {
+    margin-bottom: 0;
+  }
+</style>
