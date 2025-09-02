@@ -1,0 +1,624 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: "Bayesian Probability and Inference"
+description: "Learn Bayesian thinking, prior/posterior distributions, and modern Bayesian computation with PyMC"
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Equation from '../components/ui/Equation.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'bayesian-paradigm', text: 'The Bayesian Paradigm' },
+  { depth: 2, slug: 'simple-bayesian-example', text: 'Simple Bayesian Example: Coin Flipping' },
+  { depth: 2, slug: 'bayesian-linear-regression', text: 'Bayesian Linear Regression' },
+  { depth: 2, slug: 'modern-bayesian-computation', text: 'Modern Bayesian Computation with PyMC' },
+  { depth: 2, slug: 'model-comparison', text: 'Model Comparison and Selection' },
+  { depth: 2, slug: 'bayesian-ab-testing', text: 'Bayesian A/B Testing' },
+  { depth: 2, slug: 'key-takeaways', text: 'Key Takeaways' }
+]} />
+
+# Bayesian Probability and Inference
+
+Bayesian inference provides a principled framework for updating beliefs in light of new evidence, treating probability as a degree of belief rather than a long-run frequency.
+
+<Callout variant="note">
+**Learning Objectives**
+
+By the end of this chapter, you will:
+- Understand Bayesian vs frequentist perspectives
+- Work with prior and posterior distributions
+- Implement Bayesian models using PyMC
+- Perform model diagnostics and comparison
+</Callout>
+
+## The Bayesian Paradigm
+
+Bayesian inference is built on Bayes' theorem, which provides a mathematical framework for updating beliefs:
+
+**P(θ|data) = P(data|θ) × P(θ) / P(data)**
+
+Where:
+- **P(θ|data)**: Posterior - updated belief about parameter θ
+- **P(data|θ)**: Likelihood - probability of observing data given θ
+- **P(θ)**: Prior - initial belief about θ
+- **P(data)**: Marginal likelihood - normalizing constant
+
+## Simple Bayesian Example: Coin Flipping
+
+Let's start with a classic example: inferring the bias of a coin.
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+import seaborn as sns
+
+# Bayesian coin flipping example
+def bayesian_coin_flip(n_flips, n_heads, prior_alpha=1, prior_beta=1):
+    """
+    Bayesian inference for coin bias using Beta-Binomial conjugacy
+    
+    Prior: Beta(alpha, beta)
+    Likelihood: Binomial(n_flips, theta)
+    Posterior: Beta(alpha + n_heads, beta + n_flips - n_heads)
+    """
+    
+    # Prior parameters
+    prior_alpha = prior_alpha
+    prior_beta = prior_beta
+    
+    # Posterior parameters (conjugate update)
+    posterior_alpha = prior_alpha + n_heads
+    posterior_beta = prior_beta + n_flips - n_heads
+    
+    return posterior_alpha, posterior_beta
+
+# Simulate coin flips
+np.random.seed(42)
+true_bias = 0.7  # Unknown to us
+n_flips = 50
+flips = np.random.binomial(1, true_bias, n_flips)
+n_heads = np.sum(flips)
+
+print(f"Observed: {n_heads} heads out of {n_flips} flips")
+print(f"Sample proportion: {n_heads/n_flips:.3f}")
+
+# Bayesian inference with different priors
+priors = [
+    (1, 1),      # Uniform prior
+    (2, 2),      # Slightly informative prior favoring fairness
+    (10, 10),    # Strong prior favoring fairness
+]
+
+theta_range = np.linspace(0, 1, 1000)
+
+plt.figure(figsize=(15, 5))
+
+for i, (alpha_prior, beta_prior) in enumerate(priors):
+    plt.subplot(1, 3, i+1)
+    
+    # Prior distribution
+    prior_dist = stats.beta(alpha_prior, beta_prior)
+    prior_pdf = prior_dist.pdf(theta_range)
+    
+    # Posterior distribution
+    alpha_post, beta_post = bayesian_coin_flip(n_flips, n_heads, alpha_prior, beta_prior)
+    posterior_dist = stats.beta(alpha_post, beta_post)
+    posterior_pdf = posterior_dist.pdf(theta_range)
+    
+    # Plot
+    plt.plot(theta_range, prior_pdf, 'b--', label='Prior', alpha=0.7)
+    plt.plot(theta_range, posterior_pdf, 'r-', label='Posterior', linewidth=2)
+    plt.axvline(true_bias, color='green', linestyle=':', label='True bias')
+    plt.axvline(n_heads/n_flips, color='orange', linestyle=':', label='Sample prop.')
+    
+    plt.xlabel('Coin Bias (θ)')
+    plt.ylabel('Density')
+    plt.title(f'Prior: Beta({alpha_prior}, {beta_prior})')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Posterior summaries
+for i, (alpha_prior, beta_prior) in enumerate(priors):
+    alpha_post, beta_post = bayesian_coin_flip(n_flips, n_heads, alpha_prior, beta_prior)
+    posterior_dist = stats.beta(alpha_post, beta_post)
+    
+    mean = posterior_dist.mean()
+    std = posterior_dist.std()
+    ci_lower, ci_upper = posterior_dist.ppf([0.025, 0.975])
+    
+    print(f"\nPrior Beta({alpha_prior}, {beta_prior}):")
+    print(f"  Posterior mean: {mean:.3f}")
+    print(f"  Posterior std: {std:.3f}")
+    print(f"  95% Credible interval: [{ci_lower:.3f}, {ci_upper:.3f}]")
+```
+
+## Bayesian Linear Regression
+
+Let's implement Bayesian linear regression to understand uncertainty in model parameters.
+
+```python
+# Generate synthetic data
+np.random.seed(42)
+n_points = 50
+true_intercept = 2.0
+true_slope = 1.5
+noise_std = 0.5
+
+x = np.linspace(0, 10, n_points)
+y = true_intercept + true_slope * x + np.random.normal(0, noise_std, n_points)
+
+# Bayesian linear regression (analytical solution)
+def bayesian_linear_regression(x, y, alpha_prior=1e-3, beta_prior=1e-3):
+    """
+    Bayesian linear regression with conjugate priors
+    
+    Model: y = a + b*x + ε, where ε ~ N(0, σ²)
+    Priors: a, b ~ N(0, 1/α), σ² ~ InvGamma(α, β)
+    """
+    
+    # Design matrix
+    X = np.column_stack([np.ones(len(x)), x])
+    
+    # Prior precision matrix
+    S0_inv = alpha_prior * np.eye(2)
+    
+    # Posterior precision matrix
+    Sn_inv = S0_inv + (1/noise_std**2) * X.T @ X
+    Sn = np.linalg.inv(Sn_inv)
+    
+    # Posterior mean
+    mn = Sn @ (1/noise_std**2) * X.T @ y
+    
+    return mn, Sn
+
+# Analytical Bayesian solution
+posterior_mean, posterior_cov = bayesian_linear_regression(x, y)
+
+print("Bayesian Linear Regression Results:")
+print(f"True parameters: intercept={true_intercept}, slope={true_slope}")
+print(f"Posterior mean: intercept={posterior_mean[0]:.3f}, slope={posterior_mean[1]:.3f}")
+print(f"Posterior std: intercept={np.sqrt(posterior_cov[0,0]):.3f}, slope={np.sqrt(posterior_cov[1,1]):.3f}")
+
+# Sample from posterior
+n_samples = 1000
+posterior_samples = np.random.multivariate_normal(posterior_mean, posterior_cov, n_samples)
+
+# Visualize results
+plt.figure(figsize=(15, 5))
+
+# Data and posterior predictive
+plt.subplot(1, 3, 1)
+plt.scatter(x, y, alpha=0.6, label='Data')
+
+# Plot posterior predictive samples
+x_pred = np.linspace(0, 10, 100)
+for i in range(100):
+    a_sample, b_sample = posterior_samples[i]
+    y_pred = a_sample + b_sample * x_pred
+    plt.plot(x_pred, y_pred, 'r-', alpha=0.1)
+
+# True line
+y_true = true_intercept + true_slope * x_pred
+plt.plot(x_pred, y_true, 'g--', linewidth=2, label='True line')
+
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Bayesian Linear Regression')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Posterior distributions
+plt.subplot(1, 3, 2)
+plt.hist(posterior_samples[:, 0], bins=50, alpha=0.7, density=True, label='Intercept')
+plt.axvline(true_intercept, color='red', linestyle='--', label='True value')
+plt.xlabel('Intercept')
+plt.ylabel('Density')
+plt.title('Posterior: Intercept')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.subplot(1, 3, 3)
+plt.hist(posterior_samples[:, 1], bins=50, alpha=0.7, density=True, label='Slope')
+plt.axvline(true_slope, color='red', linestyle='--', label='True value')
+plt.xlabel('Slope')
+plt.ylabel('Density')
+plt.title('Posterior: Slope')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Modern Bayesian Computation with PyMC
+
+For complex models, we need computational methods like Markov Chain Monte Carlo (MCMC).
+
+```python
+# Note: This is a conceptual example. In practice, you would install PyMC:
+# pip install pymc arviz
+
+# Conceptual PyMC model structure
+"""
+import pymc as pm
+import arviz as az
+
+# Bayesian logistic regression example
+with pm.Model() as logistic_model:
+    # Priors
+    alpha = pm.Normal('alpha', mu=0, sigma=10)
+    beta = pm.Normal('beta', mu=0, sigma=10)
+    
+    # Linear combination
+    mu = alpha + beta * x_data
+    
+    # Likelihood
+    p = pm.math.sigmoid(mu)
+    y_obs = pm.Bernoulli('y_obs', p=p, observed=y_data)
+    
+    # Sampling
+    trace = pm.sample(2000, tune=1000, chains=4, target_accept=0.9)
+
+# Model diagnostics
+az.plot_trace(trace)
+az.summary(trace)
+az.plot_posterior(trace)
+"""
+
+# Simulate the PyMC workflow with manual MCMC
+def metropolis_hastings(log_posterior, initial_params, n_samples, proposal_std=0.1):
+    """Simple Metropolis-Hastings sampler"""
+    samples = []
+    current_params = initial_params.copy()
+    current_log_prob = log_posterior(current_params)
+    n_accepted = 0
+    
+    for i in range(n_samples):
+        # Propose new parameters
+        proposal = current_params + np.random.normal(0, proposal_std, len(current_params))
+        proposal_log_prob = log_posterior(proposal)
+        
+        # Accept/reject
+        log_ratio = proposal_log_prob - current_log_prob
+        if np.log(np.random.random()) < log_ratio:
+            current_params = proposal
+            current_log_prob = proposal_log_prob
+            n_accepted += 1
+        
+        samples.append(current_params.copy())
+    
+    acceptance_rate = n_accepted / n_samples
+    return np.array(samples), acceptance_rate
+
+# Example: Bayesian inference for normal distribution parameters
+def log_posterior_normal(params, data):
+    """Log posterior for normal distribution (mu, log_sigma)"""
+    mu, log_sigma = params
+    sigma = np.exp(log_sigma)
+    
+    # Prior: mu ~ N(0, 10), log_sigma ~ N(0, 1)
+    log_prior = stats.norm.logpdf(mu, 0, 10) + stats.norm.logpdf(log_sigma, 0, 1)
+    
+    # Likelihood
+    log_likelihood = np.sum(stats.norm.logpdf(data, mu, sigma))
+    
+    return log_prior + log_likelihood
+
+# Generate data and run MCMC
+np.random.seed(42)
+true_mu, true_sigma = 5.0, 2.0
+data = np.random.normal(true_mu, true_sigma, 100)
+
+# MCMC sampling
+initial_params = np.array([0.0, 0.0])  # [mu, log_sigma]
+samples, accept_rate = metropolis_hastings(
+    lambda params: log_posterior_normal(params, data),
+    initial_params,
+    n_samples=10000,
+    proposal_std=0.2
+)
+
+print(f"MCMC Acceptance rate: {accept_rate:.3f}")
+
+# Convert log_sigma back to sigma
+mu_samples = samples[:, 0]
+sigma_samples = np.exp(samples[:, 1])
+
+# Remove burn-in
+burn_in = 1000
+mu_samples = mu_samples[burn_in:]
+sigma_samples = sigma_samples[burn_in:]
+
+print(f"\nPosterior summaries:")
+print(f"μ: mean={np.mean(mu_samples):.3f}, std={np.std(mu_samples):.3f}")
+print(f"σ: mean={np.mean(sigma_samples):.3f}, std={np.std(sigma_samples):.3f}")
+print(f"True values: μ={true_mu}, σ={true_sigma}")
+
+# Diagnostic plots
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+# Trace plots
+axes[0, 0].plot(mu_samples)
+axes[0, 0].axhline(true_mu, color='red', linestyle='--')
+axes[0, 0].set_title('μ Trace')
+axes[0, 0].set_ylabel('μ')
+
+axes[1, 0].plot(sigma_samples)
+axes[1, 0].axhline(true_sigma, color='red', linestyle='--')
+axes[1, 0].set_title('σ Trace')
+axes[1, 0].set_ylabel('σ')
+axes[1, 0].set_xlabel('Iteration')
+
+# Posterior distributions
+axes[0, 1].hist(mu_samples, bins=50, alpha=0.7, density=True)
+axes[0, 1].axvline(true_mu, color='red', linestyle='--', label='True value')
+axes[0, 1].set_title('μ Posterior')
+axes[0, 1].set_xlabel('μ')
+axes[0, 1].legend()
+
+axes[1, 1].hist(sigma_samples, bins=50, alpha=0.7, density=True)
+axes[1, 1].axvline(true_sigma, color='red', linestyle='--', label='True value')
+axes[1, 1].set_title('σ Posterior')
+axes[1, 1].set_xlabel('σ')
+axes[1, 1].legend()
+
+# Joint posterior
+axes[0, 2].scatter(mu_samples[::10], sigma_samples[::10], alpha=0.5, s=1)
+axes[0, 2].scatter(true_mu, true_sigma, color='red', s=100, marker='x', label='True values')
+axes[0, 2].set_xlabel('μ')
+axes[0, 2].set_ylabel('σ')
+axes[0, 2].set_title('Joint Posterior')
+axes[0, 2].legend()
+
+# Autocorrelation
+def autocorrelation(x, max_lag=100):
+    n = len(x)
+    x = x - np.mean(x)
+    autocorr = np.correlate(x, x, mode='full')
+    autocorr = autocorr[n-1:n-1+max_lag]
+    return autocorr / autocorr[0]
+
+lags = range(100)
+mu_autocorr = autocorrelation(mu_samples)
+axes[1, 2].plot(lags, mu_autocorr, label='μ')
+axes[1, 2].axhline(0, color='black', linestyle='--', alpha=0.5)
+axes[1, 2].set_xlabel('Lag')
+axes[1, 2].set_ylabel('Autocorrelation')
+axes[1, 2].set_title('Autocorrelation')
+axes[1, 2].legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+## Model Comparison and Selection
+
+Bayesian methods provide principled approaches to model comparison.
+
+```python
+def bayesian_model_comparison():
+    """Compare different polynomial models using Bayesian approach"""
+    
+    # Generate data with true cubic relationship
+    np.random.seed(42)
+    n_points = 30
+    x = np.linspace(-2, 2, n_points)
+    true_coeffs = [0.5, -1.2, 0.8, 0.3]  # cubic polynomial
+    y_true = sum(coeff * x**i for i, coeff in enumerate(true_coeffs))
+    y = y_true + np.random.normal(0, 0.3, n_points)
+    
+    # Fit polynomials of different degrees
+    degrees = [1, 2, 3, 4, 5]
+    models = {}
+    
+    for degree in degrees:
+        # Fit polynomial
+        coeffs = np.polyfit(x, y, degree)
+        y_pred = np.polyval(coeffs, x)
+        
+        # Calculate log marginal likelihood (BIC approximation)
+        n_params = degree + 1
+        mse = np.mean((y - y_pred)**2)
+        log_likelihood = -0.5 * n_points * np.log(2 * np.pi * mse) - 0.5 * n_points
+        bic = -2 * log_likelihood + n_params * np.log(n_points)
+        
+        models[degree] = {
+            'coeffs': coeffs,
+            'mse': mse,
+            'bic': bic,
+            'log_likelihood': log_likelihood
+        }
+    
+    # Model comparison
+    print("Bayesian Model Comparison (BIC approximation):")
+    print("Degree | MSE    | BIC    | Δ BIC  | Weight")
+    print("-" * 45)
+    
+    bic_values = [models[d]['bic'] for d in degrees]
+    min_bic = min(bic_values)
+    delta_bics = [bic - min_bic for bic in bic_values]
+    weights = np.exp(-0.5 * np.array(delta_bics))
+    weights = weights / np.sum(weights)
+    
+    for i, degree in enumerate(degrees):
+        print(f"  {degree}    | {models[degree]['mse']:.3f} | {models[degree]['bic']:.1f} | "
+              f"{delta_bics[i]:5.1f} | {weights[i]:.3f}")
+    
+    # Visualization
+    plt.figure(figsize=(15, 5))
+    
+    # Data and model fits
+    plt.subplot(1, 3, 1)
+    plt.scatter(x, y, alpha=0.7, label='Data')
+    
+    x_smooth = np.linspace(-2, 2, 100)
+    colors = ['red', 'blue', 'green', 'orange', 'purple']
+    
+    for i, degree in enumerate(degrees):
+        y_smooth = np.polyval(models[degree]['coeffs'], x_smooth)
+        plt.plot(x_smooth, y_smooth, color=colors[i], 
+                label=f'Degree {degree}', alpha=0.7)
+    
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Model Fits')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    # BIC comparison
+    plt.subplot(1, 3, 2)
+    plt.bar(degrees, bic_values, alpha=0.7)
+    plt.xlabel('Polynomial Degree')
+    plt.ylabel('BIC')
+    plt.title('BIC Comparison (lower is better)')
+    plt.grid(True, alpha=0.3)
+    
+    # Model weights
+    plt.subplot(1, 3, 3)
+    plt.bar(degrees, weights, alpha=0.7)
+    plt.xlabel('Polynomial Degree')
+    plt.ylabel('Model Weight')
+    plt.title('Bayesian Model Weights')
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+    
+    return models
+
+models = bayesian_model_comparison()
+```
+
+## Bayesian A/B Testing
+
+Bayesian methods provide intuitive frameworks for A/B testing.
+
+```python
+def bayesian_ab_test(conversions_a, trials_a, conversions_b, trials_b, 
+                     prior_alpha=1, prior_beta=1):
+    """Bayesian A/B test using Beta-Binomial model"""
+    
+    # Posterior parameters
+    alpha_a = prior_alpha + conversions_a
+    beta_a = prior_beta + trials_a - conversions_a
+    
+    alpha_b = prior_alpha + conversions_b
+    beta_b = prior_beta + trials_b - conversions_b
+    
+    # Sample from posteriors
+    n_samples = 100000
+    samples_a = np.random.beta(alpha_a, beta_a, n_samples)
+    samples_b = np.random.beta(alpha_b, beta_b, n_samples)
+    
+    # Calculate probabilities
+    prob_b_better = np.mean(samples_b > samples_a)
+    prob_a_better = 1 - prob_b_better
+    
+    # Effect size (difference in conversion rates)
+    effect_size = samples_b - samples_a
+    effect_mean = np.mean(effect_size)
+    effect_ci = np.percentile(effect_size, [2.5, 97.5])
+    
+    return {
+        'prob_a_better': prob_a_better,
+        'prob_b_better': prob_b_better,
+        'effect_mean': effect_mean,
+        'effect_ci': effect_ci,
+        'samples_a': samples_a,
+        'samples_b': samples_b
+    }
+
+# Example A/B test
+conversions_a, trials_a = 120, 1000  # Control: 12% conversion
+conversions_b, trials_b = 140, 1000  # Treatment: 14% conversion
+
+results = bayesian_ab_test(conversions_a, trials_a, conversions_b, trials_b)
+
+print("Bayesian A/B Test Results:")
+print(f"Control (A): {conversions_a}/{trials_a} = {conversions_a/trials_a:.1%}")
+print(f"Treatment (B): {conversions_b}/{trials_b} = {conversions_b/trials_b:.1%}")
+print(f"\nProbability B is better: {results['prob_b_better']:.3f}")
+print(f"Probability A is better: {results['prob_a_better']:.3f}")
+print(f"Expected effect size: {results['effect_mean']:.3f}")
+print(f"95% CI for effect: [{results['effect_ci'][0]:.3f}, {results['effect_ci'][1]:.3f}]")
+
+# Visualization
+plt.figure(figsize=(15, 5))
+
+# Posterior distributions
+plt.subplot(1, 3, 1)
+plt.hist(results['samples_a'], bins=50, alpha=0.7, density=True, label='Control (A)')
+plt.hist(results['samples_b'], bins=50, alpha=0.7, density=True, label='Treatment (B)')
+plt.xlabel('Conversion Rate')
+plt.ylabel('Density')
+plt.title('Posterior Distributions')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Effect size distribution
+plt.subplot(1, 3, 2)
+effect_samples = results['samples_b'] - results['samples_a']
+plt.hist(effect_samples, bins=50, alpha=0.7, density=True)
+plt.axvline(0, color='red', linestyle='--', label='No effect')
+plt.axvline(results['effect_mean'], color='green', linestyle='-', label='Mean effect')
+plt.xlabel('Effect Size (B - A)')
+plt.ylabel('Density')
+plt.title('Effect Size Distribution')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+# Probability over time (sequential analysis)
+plt.subplot(1, 3, 3)
+sample_sizes = np.arange(100, trials_a + 1, 50)
+prob_b_better_seq = []
+
+for n in sample_sizes:
+    # Subsample data
+    conv_a_sub = int(conversions_a * n / trials_a)
+    conv_b_sub = int(conversions_b * n / trials_b)
+    
+    result_sub = bayesian_ab_test(conv_a_sub, n, conv_b_sub, n)
+    prob_b_better_seq.append(result_sub['prob_b_better'])
+
+plt.plot(sample_sizes, prob_b_better_seq, 'b-', linewidth=2)
+plt.axhline(0.5, color='red', linestyle='--', alpha=0.7, label='No preference')
+plt.axhline(0.95, color='green', linestyle='--', alpha=0.7, label='Strong evidence')
+plt.xlabel('Sample Size per Group')
+plt.ylabel('P(B > A)')
+plt.title('Sequential Analysis')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Key Takeaways
+
+- **Bayesian inference** treats parameters as random variables with probability distributions
+- **Prior knowledge** can be incorporated naturally into the analysis
+- **Posterior distributions** provide complete uncertainty quantification
+- **MCMC methods** enable inference for complex models
+- **Model comparison** uses marginal likelihoods and information criteria
+- **Bayesian A/B testing** provides intuitive probability statements
+
+<Callout variant="tip">
+**When to Use Bayesian Methods**
+
+- When you have prior information to incorporate
+- When you need full uncertainty quantification
+- For sequential decision making
+- When interpretability of results is crucial
+- For complex hierarchical models
+</Callout>
+
+<Pager 
+  prev={{ title: "Monte Carlo Methods", href: "/monte-carlo" }}
+  next={{ title: "Real-World Applications", href: "/applications" }}
+/>
