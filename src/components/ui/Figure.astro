@@ -1,0 +1,162 @@
+---
+export interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const { 
+  src, 
+  alt, 
+  caption, 
+  width, 
+  height, 
+  class: className = "", 
+  loading = 'lazy' 
+} = Astro.props;
+
+// Generate a unique ID for the figure
+const figureId = `figure-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<figure class={`figure my-8 ${className}`} id={figureId}>
+  <div class="figure-container relative overflow-hidden rounded-lg border bg-muted/20">
+    <img 
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={loading}
+      class="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
+      onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNzUgMTIwSDIyNVYxODBIMTc1VjEyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+CjxwYXRoIGQ9Ik0xODUgMTQwQzE4NSAxMzQuNDc3IDE4OS40NzcgMTMwIDE5NSAxMzBDMjAwLjUyMyAxMzAgMjA1IDEzNC40NzcgMjA1IDE0MEMyMDUgMTQ1LjUyMyAyMDAuNTIzIDE1MCAxOTUgMTUwQzE4OS40NzcgMTUwIDE4NSAxNDUuNTIzIDE4NSAxNDBaIiBmaWxsPSIjNjM2NjcwIi8+CjxwYXRoIGQ9Ik0xOTUgMTYwTDIxNSAxNDBMMjI1IDE1MEwyMTUgMTYwSDE5NVoiIGZpbGw9IiM2MzY2NzAiLz4KPC9zdmc+'; this.alt='Image failed to load: ' + this.alt; this.classList.add('error-image');"
+    />
+    
+    <!-- Loading placeholder -->
+    <div class="loading-placeholder absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
+      <div class="text-muted-foreground text-sm">Loading image...</div>
+    </div>
+  </div>
+  
+  {caption && (
+    <figcaption class="mt-3 text-sm text-muted-foreground text-center italic">
+      {caption}
+    </figcaption>
+  )}
+</figure>
+
+<script>
+  // Handle image loading states
+  function initializeImages() {
+    document.querySelectorAll('.figure img').forEach(img => {
+      const placeholder = img.parentElement?.querySelector('.loading-placeholder');
+      
+      // Hide placeholder when image loads
+      img.addEventListener('load', () => {
+        if (placeholder) {
+          placeholder.style.display = 'none';
+        }
+        img.style.opacity = '1';
+      });
+      
+      // Handle error state
+      img.addEventListener('error', () => {
+        if (placeholder) {
+          placeholder.innerHTML = '<div class="text-red-500 text-sm">Failed to load image</div>';
+        }
+      });
+      
+      // If image is already loaded (cached), hide placeholder immediately
+      if (img.complete && img.naturalHeight !== 0) {
+        if (placeholder) {
+          placeholder.style.display = 'none';
+        }
+        img.style.opacity = '1';
+      }
+    });
+  }
+  
+  // Initialize on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeImages);
+  } else {
+    initializeImages();
+  }
+  
+  // Re-initialize on navigation
+  document.addEventListener('astro:page-load', initializeImages);
+</script>
+
+<style>
+  .figure {
+    /* Ensure proper spacing and centering */
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .figure-container {
+    /* Maintain aspect ratio and prevent layout shift */
+    position: relative;
+  }
+  
+  .figure img {
+    /* Smooth loading transition */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  }
+  
+  .figure img.error-image {
+    /* Style for error state */
+    opacity: 0.7;
+    filter: grayscale(100%);
+  }
+  
+  .loading-placeholder {
+    /* Ensure placeholder is visible during loading */
+    z-index: 1;
+  }
+  
+  /* Responsive image sizing */
+  @media (max-width: 768px) {
+    .figure {
+      margin-left: -1rem;
+      margin-right: -1rem;
+    }
+    
+    .figure-container {
+      border-radius: 0;
+    }
+  }
+  
+  /* Dark mode adjustments */
+  .dark .figure-container {
+    background-color: rgb(15 23 42 / 0.3); /* slate-900/30 */
+    border-color: rgb(51 65 85); /* slate-700 */
+  }
+  
+  .dark .loading-placeholder {
+    background-color: rgb(51 65 85); /* slate-700 */
+  }
+  
+  /* Accessibility improvements */
+  .figure img:focus {
+    outline: 2px solid rgb(59 130 246); /* blue-500 */
+    outline-offset: 2px;
+  }
+  
+  /* Print styles */
+  @media print {
+    .figure {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    
+    .figure img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+  }
+</style>
