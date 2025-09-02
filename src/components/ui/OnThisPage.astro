@@ -1,0 +1,245 @@
+---
+export interface Props {
+  headings?: Array<{
+    depth: number;
+    slug: string;
+    text: string;
+  }>;
+  class?: string;
+}
+
+const { headings = [], class: className = "" } = Astro.props;
+
+// Filter headings to only include h2 and h3 for better readability
+const filteredHeadings = headings.filter(heading => heading.depth >= 2 && heading.depth <= 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <aside class={`on-this-page ${className}`} aria-labelledby="toc-heading">
+    <!-- Desktop version -->
+    <div class="hidden lg:block sticky top-24 w-64 h-fit">
+      <div class="border rounded-lg p-4 bg-muted/30">
+        <h2 id="toc-heading" class="font-display font-semibold text-sm uppercase tracking-wide mb-4 text-muted-foreground">
+          On This Page
+        </h2>
+        <nav aria-labelledby="toc-heading">
+          <ul class="space-y-2 text-sm">
+            {filteredHeadings.map((heading) => (
+              <li class={`toc-item toc-depth-${heading.depth}`}>
+                <a 
+                  href={`#${heading.slug}`}
+                  class={`toc-link block py-1 text-muted-foreground hover:text-foreground transition-colors ${
+                    heading.depth === 3 ? 'pl-4 text-xs' : ''
+                  }`}
+                  data-heading-id={heading.slug}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- Mobile version -->
+    <div class="lg:hidden mb-8">
+      <details class="border rounded-lg bg-muted/30">
+        <summary class="p-4 cursor-pointer font-display font-semibold text-sm uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+          <span>On This Page</span>
+          <svg class="inline-block w-4 h-4 ml-2 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </summary>
+        <nav class="px-4 pb-4" aria-labelledby="toc-heading">
+          <ul class="space-y-2 text-sm">
+            {filteredHeadings.map((heading) => (
+              <li class={`toc-item toc-depth-${heading.depth}`}>
+                <a 
+                  href={`#${heading.slug}`}
+                  class={`toc-link block py-1 text-muted-foreground hover:text-foreground transition-colors ${
+                    heading.depth === 3 ? 'pl-4 text-xs' : ''
+                  }`}
+                  data-heading-id={heading.slug}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </aside>
+)}
+
+<script>
+  // Table of contents functionality
+  function initializeTableOfContents() {
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    
+    if (tocLinks.length === 0 || headings.length === 0) return;
+    
+    // Create intersection observer to highlight current section
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.getAttribute('id');
+          const tocLink = document.querySelector(`[data-heading-id="${id}"]`);
+          
+          if (entry.isIntersecting) {
+            // Remove active class from all links
+            tocLinks.forEach(link => {
+              link.classList.remove('active');
+            });
+            
+            // Add active class to current link
+            if (tocLink) {
+              tocLink.classList.add('active');
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '-20% 0% -35% 0%',
+        threshold: 0
+      }
+    );
+    
+    // Observe all headings
+    headings.forEach((heading) => {
+      if (heading.getAttribute('id')) {
+        observer.observe(heading);
+      }
+    });
+    
+    // Smooth scroll behavior for TOC links
+    tocLinks.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href')?.substring(1);
+        const targetElement = document.getElementById(targetId || '');
+        
+        if (targetElement) {
+          const headerOffset = 80; // Account for sticky header
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+          
+          // Update URL without triggering scroll
+          history.pushState(null, '', `#${targetId}`);
+        }
+      });
+    });
+    
+    // Handle mobile details toggle
+    const details = document.querySelector('.on-this-page details');
+    const summary = details?.querySelector('summary');
+    const arrow = summary?.querySelector('svg');
+    
+    if (details && arrow) {
+      details.addEventListener('toggle', () => {
+        if (details.open) {
+          arrow.style.transform = 'rotate(180deg)';
+        } else {
+          arrow.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+  }
+  
+  // Initialize on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTableOfContents);
+  } else {
+    initializeTableOfContents();
+  }
+  
+  // Re-initialize on navigation
+  document.addEventListener('astro:page-load', initializeTableOfContents);
+</script>
+
+<style>
+  .on-this-page {
+    /* Base styles */
+  }
+  
+  /* Active link styling */
+  .toc-link.active {
+    @apply text-primary font-medium;
+    position: relative;
+  }
+  
+  .toc-link.active::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 16px;
+    background-color: rgb(59 130 246); /* blue-500 */
+    border-radius: 1px;
+  }
+  
+  /* Depth-based indentation */
+  .toc-depth-2 {
+    /* H2 headings - no additional indentation */
+  }
+  
+  .toc-depth-3 {
+    /* H3 headings - indented */
+    @apply text-xs;
+  }
+  
+  .toc-depth-3 .toc-link {
+    @apply pl-4;
+  }
+  
+  /* Hover effects */
+  .toc-link:hover {
+    @apply text-foreground;
+  }
+  
+  /* Focus styles for accessibility */
+  .toc-link:focus {
+    @apply outline-none ring-2 ring-primary ring-offset-2 rounded;
+  }
+  
+  /* Mobile details styling */
+  details summary {
+    list-style: none;
+  }
+  
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  details[open] summary svg {
+    transform: rotate(180deg);
+  }
+  
+  /* Dark mode adjustments */
+  .dark .toc-link.active::before {
+    background-color: rgb(96 165 250); /* blue-400 */
+  }
+  
+  /* Responsive design */
+  @media (max-width: 1024px) {
+    .on-this-page .sticky {
+      position: static;
+    }
+  }
+  
+  /* Print styles */
+  @media print {
+    .on-this-page {
+      display: none;
+    }
+  }
+</style>
