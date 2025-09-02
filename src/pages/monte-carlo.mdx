@@ -1,0 +1,477 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: "Monte Carlo Methods and Simulation"
+description: "Learn Monte Carlo simulation techniques, variance reduction methods, and their applications in Python"
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Figure from '../components/ui/Figure.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'what-is-monte-carlo', text: 'What is Monte Carlo Simulation?' },
+  { depth: 2, slug: 'classic-example-pi', text: 'Classic Example: Estimating π' },
+  { depth: 2, slug: 'monte-carlo-integration', text: 'Monte Carlo Integration' },
+  { depth: 3, slug: 'basic-integration', text: 'Basic Monte Carlo Integration' },
+  { depth: 2, slug: 'variance-reduction', text: 'Variance Reduction Techniques' },
+  { depth: 3, slug: 'importance-sampling', text: 'Importance Sampling' },
+  { depth: 3, slug: 'control-variates', text: 'Control Variates' },
+  { depth: 2, slug: 'financial-applications', text: 'Financial Applications: Option Pricing' },
+  { depth: 3, slug: 'black-scholes-monte-carlo', text: 'Black-Scholes Monte Carlo' },
+  { depth: 2, slug: 'convergence-assessment', text: 'Convergence Assessment' },
+  { depth: 2, slug: 'key-takeaways', text: 'Key Takeaways' }
+]} />
+
+# Monte Carlo Methods and Simulation
+
+Monte Carlo methods use random sampling to solve mathematical problems that might be deterministic in principle but are difficult to solve analytically.
+
+<Callout variant="note">
+**Learning Objectives**
+
+By the end of this chapter, you will:
+- Understand the principles of Monte Carlo simulation
+- Implement Monte Carlo methods for various problems
+- Apply variance reduction techniques
+- Assess convergence and accuracy of simulations
+</Callout>
+
+## What is Monte Carlo Simulation?
+
+Monte Carlo simulation is a computational technique that uses random sampling to obtain numerical results. It's particularly useful for:
+
+- **Integration**: Estimating integrals that are difficult to solve analytically
+- **Optimization**: Finding optimal solutions in complex spaces
+- **Risk Assessment**: Modeling uncertainty in financial and engineering systems
+- **Physics Simulations**: Modeling particle interactions and quantum systems
+
+## Classic Example: Estimating π
+
+One of the most famous Monte Carlo examples is estimating π by randomly throwing darts at a square containing a circle.
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def estimate_pi_monte_carlo(n_samples):
+    """Estimate π using Monte Carlo method"""
+    # Generate random points in unit square [0,1] x [0,1]
+    x = np.random.uniform(0, 1, n_samples)
+    y = np.random.uniform(0, 1, n_samples)
+    
+    # Check if points are inside unit circle
+    inside_circle = (x**2 + y**2) <= 1
+    
+    # Estimate π: (points inside circle / total points) * 4
+    pi_estimate = 4 * np.sum(inside_circle) / n_samples
+    
+    return pi_estimate, x, y, inside_circle
+
+# Run simulation
+np.random.seed(42)
+n_samples = 10000
+pi_est, x, y, inside = estimate_pi_monte_carlo(n_samples)
+
+print(f"Estimated π: {pi_est:.6f}")
+print(f"Actual π: {np.pi:.6f}")
+print(f"Error: {abs(pi_est - np.pi):.6f}")
+
+# Visualize the simulation
+plt.figure(figsize=(10, 5))
+
+# Plot the dart throwing visualization
+plt.subplot(1, 2, 1)
+colors = ['red' if inside_i else 'blue' for inside_i in inside[:1000]]
+plt.scatter(x[:1000], y[:1000], c=colors, alpha=0.6, s=1)
+circle = plt.Circle((0, 0), 1, fill=False, color='black', linewidth=2)
+plt.gca().add_patch(circle)
+plt.xlim(0, 1)
+plt.ylim(0, 1)
+plt.gca().set_aspect('equal')
+plt.title('Monte Carlo Estimation of π')
+plt.xlabel('x')
+plt.ylabel('y')
+
+# Plot convergence
+plt.subplot(1, 2, 2)
+sample_sizes = np.logspace(2, 4, 50).astype(int)
+pi_estimates = []
+
+for n in sample_sizes:
+    pi_est_temp, _, _, _ = estimate_pi_monte_carlo(n)
+    pi_estimates.append(pi_est_temp)
+
+plt.semilogx(sample_sizes, pi_estimates, 'b-', alpha=0.7)
+plt.axhline(y=np.pi, color='red', linestyle='--', label='True π')
+plt.xlabel('Number of Samples')
+plt.ylabel('π Estimate')
+plt.title('Convergence to π')
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Monte Carlo Integration
+
+Monte Carlo methods excel at high-dimensional integration where traditional numerical methods become impractical.
+
+### Basic Monte Carlo Integration
+
+For a function f(x) over domain [a,b], the integral can be estimated as:
+
+**∫[a to b] f(x)dx ≈ (b-a) × (1/N) × Σf(xi)**
+
+```python
+def monte_carlo_integration(func, a, b, n_samples):
+    """Estimate integral using Monte Carlo method"""
+    # Generate random samples in [a, b]
+    x = np.random.uniform(a, b, n_samples)
+    
+    # Evaluate function at sample points
+    y = func(x)
+    
+    # Estimate integral
+    integral_estimate = (b - a) * np.mean(y)
+    
+    return integral_estimate
+
+# Example: Integrate x^2 from 0 to 1
+def f(x):
+    return x**2
+
+# Analytical solution: ∫[0 to 1] x^2 dx = 1/3
+analytical_result = 1/3
+
+# Monte Carlo estimation
+np.random.seed(42)
+n_samples = 100000
+mc_result = monte_carlo_integration(f, 0, 1, n_samples)
+
+print(f"Analytical result: {analytical_result:.6f}")
+print(f"Monte Carlo result: {mc_result:.6f}")
+print(f"Error: {abs(mc_result - analytical_result):.6f}")
+
+# Study convergence
+sample_sizes = np.logspace(2, 5, 50).astype(int)
+errors = []
+
+for n in sample_sizes:
+    mc_est = monte_carlo_integration(f, 0, 1, n)
+    error = abs(mc_est - analytical_result)
+    errors.append(error)
+
+plt.figure(figsize=(10, 6))
+plt.loglog(sample_sizes, errors, 'b-', alpha=0.7, label='Monte Carlo Error')
+plt.loglog(sample_sizes, 1/np.sqrt(sample_sizes), 'r--', label='1/√n (theoretical)')
+plt.xlabel('Number of Samples')
+plt.ylabel('Absolute Error')
+plt.title('Monte Carlo Integration Convergence')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+```
+
+## Variance Reduction Techniques
+
+Standard Monte Carlo can be slow to converge. Variance reduction techniques can significantly improve efficiency.
+
+### Importance Sampling
+
+Instead of sampling uniformly, we sample from a distribution that concentrates samples where the integrand is large.
+
+```python
+def importance_sampling_integration(func, pdf_samples, pdf_values, n_samples):
+    """Integration using importance sampling"""
+    # Generate samples from importance distribution
+    samples = pdf_samples(n_samples)
+    
+    # Calculate weights: f(x) / p(x)
+    weights = func(samples) / pdf_values(samples)
+    
+    # Estimate integral
+    integral_estimate = np.mean(weights)
+    
+    return integral_estimate
+
+# Example: Integrate exp(-x^2) from 0 to ∞
+# Use exponential distribution as importance distribution
+
+def target_function(x):
+    return np.exp(-x**2)
+
+def importance_pdf_sample(n):
+    return np.random.exponential(1, n)
+
+def importance_pdf_value(x):
+    return np.exp(-x)  # PDF of exponential(1)
+
+# Compare standard Monte Carlo vs importance sampling
+np.random.seed(42)
+n_samples = 10000
+
+# Standard Monte Carlo (truncated domain)
+x_uniform = np.random.uniform(0, 5, n_samples)
+standard_mc = 5 * np.mean(target_function(x_uniform))
+
+# Importance sampling
+importance_result = importance_sampling_integration(
+    target_function, importance_pdf_sample, importance_pdf_value, n_samples
+)
+
+# Analytical result (approximately √π/2)
+analytical = np.sqrt(np.pi) / 2
+
+print(f"Analytical result: {analytical:.6f}")
+print(f"Standard MC: {standard_mc:.6f} (error: {abs(standard_mc - analytical):.6f})")
+print(f"Importance sampling: {importance_result:.6f} (error: {abs(importance_result - analytical):.6f})")
+```
+
+### Control Variates
+
+Use a correlated function with known expectation to reduce variance.
+
+```python
+def control_variate_integration(func, control_func, control_expectation, n_samples):
+    """Integration using control variates"""
+    # Generate samples
+    x = np.random.uniform(0, 1, n_samples)
+    
+    # Evaluate functions
+    f_values = func(x)
+    c_values = control_func(x)
+    
+    # Optimal control coefficient
+    cov_fc = np.cov(f_values, c_values)[0, 1]
+    var_c = np.var(c_values)
+    beta = cov_fc / var_c if var_c > 0 else 0
+    
+    # Control variate estimator
+    controlled_values = f_values - beta * (c_values - control_expectation)
+    integral_estimate = np.mean(controlled_values)
+    
+    return integral_estimate, beta
+
+# Example: Integrate x^3 using x^2 as control variate
+def target_func(x):
+    return x**3
+
+def control_func(x):
+    return x**2
+
+control_expectation = 1/3  # E[X^2] for uniform on [0,1]
+analytical_target = 1/4    # ∫[0,1] x^3 dx
+
+np.random.seed(42)
+n_samples = 10000
+
+# Standard Monte Carlo
+standard_result = monte_carlo_integration(target_func, 0, 1, n_samples)
+
+# Control variate method
+cv_result, beta_opt = control_variate_integration(
+    target_func, control_func, control_expectation, n_samples
+)
+
+print(f"Analytical result: {analytical_target:.6f}")
+print(f"Standard MC: {standard_result:.6f} (error: {abs(standard_result - analytical_target):.6f})")
+print(f"Control variate: {cv_result:.6f} (error: {abs(cv_result - analytical_target):.6f})")
+print(f"Optimal β: {beta_opt:.4f}")
+```
+
+## Financial Applications: Option Pricing
+
+Monte Carlo methods are widely used in finance for pricing complex derivatives.
+
+### Black-Scholes Monte Carlo
+
+```python
+def black_scholes_monte_carlo(S0, K, T, r, sigma, n_simulations, option_type='call'):
+    """Price European option using Monte Carlo simulation"""
+    dt = T
+    
+    # Generate random stock price paths
+    Z = np.random.standard_normal(n_simulations)
+    ST = S0 * np.exp((r - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
+    
+    # Calculate payoffs
+    if option_type == 'call':
+        payoffs = np.maximum(ST - K, 0)
+    else:  # put
+        payoffs = np.maximum(K - ST, 0)
+    
+    # Discount to present value
+    option_price = np.exp(-r * T) * np.mean(payoffs)
+    
+    # Calculate standard error
+    std_error = np.exp(-r * T) * np.std(payoffs) / np.sqrt(n_simulations)
+    
+    return option_price, std_error, ST
+
+# Example: Price a call option
+S0 = 100      # Current stock price
+K = 105       # Strike price
+T = 0.25      # Time to expiration (3 months)
+r = 0.05      # Risk-free rate
+sigma = 0.2   # Volatility
+
+np.random.seed(42)
+n_simulations = 100000
+
+call_price, std_err, final_prices = black_scholes_monte_carlo(
+    S0, K, T, r, sigma, n_simulations, 'call'
+)
+
+# Analytical Black-Scholes price for comparison
+from scipy.stats import norm
+
+def black_scholes_analytical(S, K, T, r, sigma, option_type='call'):
+    d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T) / (sigma*np.sqrt(T))
+    d2 = d1 - sigma*np.sqrt(T)
+    
+    if option_type == 'call':
+        price = S*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
+    else:
+        price = K*np.exp(-r*T)*norm.cdf(-d2) - S*norm.cdf(-d1)
+    
+    return price
+
+analytical_price = black_scholes_analytical(S0, K, T, r, sigma, 'call')
+
+print(f"Monte Carlo call price: {call_price:.4f} ± {1.96*std_err:.4f}")
+print(f"Analytical call price: {analytical_price:.4f}")
+print(f"Difference: {abs(call_price - analytical_price):.4f}")
+
+# Visualize stock price distribution
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.hist(final_prices, bins=50, alpha=0.7, density=True)
+plt.axvline(K, color='red', linestyle='--', label=f'Strike = {K}')
+plt.xlabel('Final Stock Price')
+plt.ylabel('Density')
+plt.title('Simulated Stock Price Distribution')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+payoffs = np.maximum(final_prices - K, 0)
+plt.hist(payoffs, bins=50, alpha=0.7, density=True)
+plt.xlabel('Option Payoff')
+plt.ylabel('Density')
+plt.title('Call Option Payoff Distribution')
+
+plt.tight_layout()
+plt.show()
+```
+
+## Convergence Assessment
+
+Proper assessment of Monte Carlo convergence is crucial for reliable results.
+
+```python
+def assess_convergence(func, true_value, max_samples=100000, n_runs=10):
+    """Assess Monte Carlo convergence"""
+    sample_sizes = np.logspace(2, np.log10(max_samples), 50).astype(int)
+    
+    results = []
+    for n in sample_sizes:
+        run_results = []
+        for _ in range(n_runs):
+            estimate = func(n)
+            run_results.append(estimate)
+        
+        mean_estimate = np.mean(run_results)
+        std_estimate = np.std(run_results)
+        bias = mean_estimate - true_value
+        mse = np.mean([(est - true_value)**2 for est in run_results])
+        
+        results.append({
+            'n': n,
+            'mean': mean_estimate,
+            'std': std_estimate,
+            'bias': bias,
+            'mse': mse,
+            'runs': run_results
+        })
+    
+    return results
+
+# Example: Assess π estimation convergence
+def pi_estimator(n):
+    pi_est, _, _, _ = estimate_pi_monte_carlo(n)
+    return pi_est
+
+np.random.seed(42)
+convergence_results = assess_convergence(pi_estimator, np.pi, max_samples=50000, n_runs=20)
+
+# Plot convergence diagnostics
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+
+sample_sizes = [r['n'] for r in convergence_results]
+means = [r['mean'] for r in convergence_results]
+stds = [r['std'] for r in convergence_results]
+biases = [r['bias'] for r in convergence_results]
+mses = [r['mse'] for r in convergence_results]
+
+# Mean estimate
+axes[0, 0].semilogx(sample_sizes, means, 'b-', alpha=0.7)
+axes[0, 0].axhline(y=np.pi, color='red', linestyle='--', label='True π')
+axes[0, 0].set_xlabel('Sample Size')
+axes[0, 0].set_ylabel('Mean Estimate')
+axes[0, 0].set_title('Convergence of Mean Estimate')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Standard deviation
+axes[0, 1].loglog(sample_sizes, stds, 'g-', alpha=0.7, label='Observed')
+axes[0, 1].loglog(sample_sizes, 1/np.sqrt(sample_sizes), 'r--', label='1/√n')
+axes[0, 1].set_xlabel('Sample Size')
+axes[0, 1].set_ylabel('Standard Deviation')
+axes[0, 1].set_title('Standard Deviation vs Sample Size')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Bias
+axes[1, 0].semilogx(sample_sizes, np.abs(biases), 'purple', alpha=0.7)
+axes[1, 0].set_xlabel('Sample Size')
+axes[1, 0].set_ylabel('|Bias|')
+axes[1, 0].set_title('Absolute Bias')
+axes[1, 0].grid(True, alpha=0.3)
+
+# MSE
+axes[1, 1].loglog(sample_sizes, mses, 'orange', alpha=0.7, label='Observed MSE')
+axes[1, 1].loglog(sample_sizes, 1/sample_sizes, 'r--', label='1/n')
+axes[1, 1].set_xlabel('Sample Size')
+axes[1, 1].set_ylabel('Mean Squared Error')
+axes[1, 1].set_title('Mean Squared Error')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Key Takeaways
+
+- **Monte Carlo methods** use random sampling to solve complex mathematical problems
+- **Convergence rate** is typically O(1/√n), independent of dimensionality
+- **Variance reduction** techniques can dramatically improve efficiency
+- **Proper convergence assessment** is essential for reliable results
+- **Applications** span finance, physics, engineering, and machine learning
+
+<Callout variant="tip">
+**Best Practices**
+
+- Always set random seeds for reproducibility
+- Use multiple independent runs to assess variability
+- Consider variance reduction techniques for better efficiency
+- Monitor convergence diagnostics, not just final estimates
+- Validate against analytical solutions when available
+</Callout>
+
+<Pager 
+  prev={{ title: "Statistical Inference", href: "/statistical-inference" }}
+  next={{ title: "Bayesian Probability", href: "/bayesian" }}
+/>
