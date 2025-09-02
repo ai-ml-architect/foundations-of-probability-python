@@ -1,0 +1,169 @@
+---
+export interface Props {
+  math: string;
+  display?: boolean;
+  label?: string;
+  class?: string;
+}
+
+const { math, display = false, label, class: className = "" } = Astro.props;
+
+// Generate a unique ID for the equation if a label is provided
+const equationId = label ? `eq-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined;
+---
+
+<div class={`equation-container ${display ? 'equation-display' : 'equation-inline'} ${className}`}>
+  {display ? (
+    <div class="flex items-center justify-center my-6">
+      <div class="flex items-center space-x-4 w-full">
+        <div 
+          class="katex-display flex-1 text-center" 
+          id={equationId}
+          data-math={math}
+        >
+          <!-- Math will be rendered by KaTeX -->
+        </div>
+        {label && (
+          <div class="text-sm text-muted-foreground font-mono">
+            ({label})
+          </div>
+        )}
+      </div>
+    </div>
+  ) : (
+    <span 
+      class="katex-inline" 
+      id={equationId}
+      data-math={math}
+    >
+      <!-- Inline math will be rendered by KaTeX -->
+    </span>
+  )}
+</div>
+
+<script>
+  // This script will run on the client to render KaTeX
+  import katex from 'katex';
+  
+  // Function to render math
+  function renderMath() {
+    // Render display math
+    document.querySelectorAll('.katex-display').forEach((element) => {
+      const math = element.getAttribute('data-math');
+      if (math) {
+        try {
+          katex.render(math, element, {
+            displayMode: true,
+            throwOnError: false,
+            errorColor: '#cc0000',
+            strict: false,
+            trust: false,
+            macros: {
+              "\\RR": "\\mathbb{R}",
+              "\\NN": "\\mathbb{N}",
+              "\\ZZ": "\\mathbb{Z}",
+              "\\QQ": "\\mathbb{Q}",
+              "\\CC": "\\mathbb{C}",
+              "\\PP": "\\mathbb{P}",
+              "\\EE": "\\mathbb{E}",
+              "\\Var": "\\text{Var}",
+              "\\Cov": "\\text{Cov}",
+              "\\given": "\\,|\\,",
+            }
+          });
+        } catch (error) {
+          console.error('KaTeX rendering error:', error);
+          element.textContent = `Error rendering: ${math}`;
+          element.classList.add('text-red-500');
+        }
+      }
+    });
+    
+    // Render inline math
+    document.querySelectorAll('.katex-inline').forEach((element) => {
+      const math = element.getAttribute('data-math');
+      if (math) {
+        try {
+          katex.render(math, element, {
+            displayMode: false,
+            throwOnError: false,
+            errorColor: '#cc0000',
+            strict: false,
+            trust: false,
+            macros: {
+              "\\RR": "\\mathbb{R}",
+              "\\NN": "\\mathbb{N}",
+              "\\ZZ": "\\mathbb{Z}",
+              "\\QQ": "\\mathbb{Q}",
+              "\\CC": "\\mathbb{C}",
+              "\\PP": "\\mathbb{P}",
+              "\\EE": "\\mathbb{E}",
+              "\\Var": "\\text{Var}",
+              "\\Cov": "\\text{Cov}",
+              "\\given": "\\,|\\,",
+            }
+          });
+        } catch (error) {
+          console.error('KaTeX rendering error:', error);
+          element.textContent = `Error: ${math}`;
+          element.classList.add('text-red-500');
+        }
+      }
+    });
+  }
+  
+  // Render math when DOM is loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMath);
+  } else {
+    renderMath();
+  }
+  
+  // Re-render math when navigating (for SPA-like behavior)
+  document.addEventListener('astro:page-load', renderMath);
+</script>
+
+<style>
+  .equation-container {
+    /* Ensure proper spacing and alignment */
+  }
+  
+  .equation-display {
+    /* Display equations get full width and centering */
+    width: 100%;
+  }
+  
+  .equation-inline {
+    /* Inline equations should flow with text */
+    display: inline;
+  }
+  
+  /* KaTeX styling improvements */
+  .katex-display .katex {
+    text-align: center;
+  }
+  
+  .katex {
+    font-size: 1.1em;
+  }
+  
+  /* Dark mode adjustments */
+  .dark .katex {
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  /* Error styling */
+  .katex-error {
+    color: #cc0000;
+    border: 1px solid #cc0000;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: #ffeeee;
+  }
+  
+  .dark .katex-error {
+    background-color: #330000;
+    border-color: #ff6666;
+    color: #ff6666;
+  }
+</style>
