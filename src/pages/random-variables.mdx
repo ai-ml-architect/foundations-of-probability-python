@@ -1,0 +1,155 @@
+---
+layout: '../layouts/ContentLayout.astro'
+title: "Random Variables and Probability Distributions"
+description: "Understanding discrete and continuous random variables, probability distributions, and their Python implementations"
+---
+
+import Callout from '../components/ui/Callout.astro';
+import Pager from '../components/ui/Pager.astro';
+import OnThisPage from '../components/ui/OnThisPage.astro';
+
+<OnThisPage slot="sidebar" headings={[
+  { depth: 2, slug: 'what-is-random-variable', text: 'What is a Random Variable?' },
+  { depth: 2, slug: 'discrete-random-variables', text: 'Discrete Random Variables' },
+  { depth: 3, slug: 'example-binomial', text: 'Example: Binomial Distribution' },
+  { depth: 2, slug: 'continuous-random-variables', text: 'Continuous Random Variables' },
+  { depth: 3, slug: 'example-normal', text: 'Example: Normal Distribution' },
+  { depth: 2, slug: 'scipy-distributions', text: 'Working with SciPy Distributions' },
+  { depth: 2, slug: 'key-takeaways', text: 'Key Takeaways' }
+]} />
+
+# Random Variables and Probability Distributions
+
+Random variables provide the mathematical bridge between abstract probability spaces and numerical analysis.
+
+<Callout variant="note">
+**Learning Objectives**
+
+By the end of this chapter, you will:
+- Understand discrete and continuous random variables
+- Work with probability mass functions (PMF) and probability density functions (PDF)
+- Implement common probability distributions in Python
+</Callout>
+
+## What is a Random Variable?
+
+Think of a random variable as a "measurement" or "observation" we make on the outcome of a random experiment:
+
+- **Coin flip**: X = 1 if heads, 0 if tails
+- **Die roll**: X = the number showing (1, 2, 3, 4, 5, or 6)
+- **Stock price**: X = closing price at end of day
+
+## Discrete Random Variables
+
+Discrete random variables take on countable values. They are characterized by their **Probability Mass Function (PMF)**.
+
+**P(X = x) = p(x)**
+
+The PMF must satisfy two conditions:
+1. **p(x) >= 0** for all x
+2. The sum of all probabilities equals 1
+
+### Example: Binomial Distribution
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Binomial distribution: n trials, probability p of success
+n, p = 10, 0.3
+x = np.arange(0, n + 1)
+
+# Calculate PMF
+pmf = stats.binom.pmf(x, n, p)
+
+# Plot the distribution
+plt.figure(figsize=(10, 6))
+plt.bar(x, pmf, alpha=0.7, color='skyblue')
+plt.xlabel('Number of Successes')
+plt.ylabel('Probability')
+plt.title(f'Binomial Distribution (n={n}, p={p})')
+plt.show()
+
+# Calculate statistics
+mean = stats.binom.mean(n, p)
+variance = stats.binom.var(n, p)
+print(f"Mean: {mean}")
+print(f"Variance: {variance}")
+```
+
+## Continuous Random Variables
+
+Continuous random variables can take any value in an interval. They are characterized by their **Probability Density Function (PDF)**.
+
+For continuous variables, we calculate probabilities over intervals:
+
+**P(a ≤ X ≤ b) = ∫[a to b] f(x) dx**
+
+### Example: Normal Distribution
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Standard normal distribution
+mu, sigma = 0, 1
+x = np.linspace(-4, 4, 100)
+
+# Calculate PDF
+pdf = stats.norm.pdf(x, mu, sigma)
+
+# Plot the distribution
+plt.figure(figsize=(10, 6))
+plt.plot(x, pdf, 'b-', linewidth=2, label='PDF')
+plt.fill_between(x, pdf, alpha=0.3)
+
+plt.xlabel('x')
+plt.ylabel('Probability Density')
+plt.title('Standard Normal Distribution')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Calculate probabilities
+prob_interval = stats.norm.cdf(1, mu, sigma) - stats.norm.cdf(-1, mu, sigma)
+print(f"P(-1 <= X <= 1) = {prob_interval:.4f}")
+```
+
+## Working with SciPy Distributions
+
+SciPy provides a unified interface for working with probability distributions:
+
+```python
+from scipy import stats
+import numpy as np
+
+# Create distribution objects
+normal_dist = stats.norm(loc=0, scale=1)  # Standard normal
+binomial_dist = stats.binom(n=10, p=0.3)  # Binomial
+
+# Common operations
+print("Normal Distribution:")
+samples = normal_dist.rvs(size=1000)
+print(f"Sample mean: {np.mean(samples):.4f}")
+print(f"P(X <= 1): {normal_dist.cdf(1):.4f}")
+print(f"95th percentile: {normal_dist.ppf(0.95):.4f}")
+
+print("\nBinomial Distribution:")
+samples = binomial_dist.rvs(size=1000)
+print(f"Sample mean: {np.mean(samples):.4f}")
+print(f"P(X = 3): {binomial_dist.pmf(3):.4f}")
+```
+
+## Key Takeaways
+
+- **Random variables** transform random outcomes into numbers for mathematical analysis
+- **Discrete variables** use PMFs; **continuous variables** use PDFs
+- **SciPy** provides powerful tools for working with probability distributions
+- Understanding distributions is crucial for statistical inference and modeling
+
+<Pager 
+  prev={{ title: "Basic Concepts", href: "/basic-concepts" }}
+  next={{ title: "Statistical Inference", href: "/statistical-inference" }}
+/>
